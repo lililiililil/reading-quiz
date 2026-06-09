@@ -286,7 +286,14 @@
 
     // 1. 글로벌 환경 설정
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-book-quiz';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+   const firebaseConfig = {
+    apiKey: "AIzaSy...",
+    authDomain: "school-quiz.firebaseapp.com",
+    projectId: "school-quiz",
+    storageBucket: "school-quiz.appspot.com",
+    messagingSenderId: "12345678",
+    appId: "1:123456:web:abcd"
+};
     const adminPasswordDefault = "sangwoolib";
 
     let db = null;
