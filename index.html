@@ -822,6 +822,7 @@
         return cleaned;
     }
 
+    // 💡 [안전 수정] 엑셀 샘플에 출제범위 열이 정상 포함되도록 수정
     document.getElementById('download-sample-btn').onclick = (e) => {
         e.preventDefault();
         const data = [
@@ -1026,19 +1027,22 @@
         }
     }
 
+    // 💡 [타입 불일치 방지 보정] 문자열 형태의 정답과 정수형 인덱스(idx) 대조가 어긋나지 않도록 parseInt 안전장치 결합
     function judgeChoiceAnswer(idx) {
         document.querySelectorAll('.option-button').forEach(b => b.disabled = true);
-        const correctNum = currentQuiz.correct;
+        const correctNum = parseInt(currentQuiz.correct);
         const arr = [currentQuiz.option1, currentQuiz.option2, currentQuiz.option3, currentQuiz.option4];
         showAnswerFeedback(idx === correctNum, `${correctNum}번 (${arr[correctNum - 1]})`);
     }
 
+    // 💡 [OX 대소문자 예외 방지 보정]
     function judgeOXAnswer(char) {
         document.querySelectorAll('.ox-button').forEach(b => b.disabled = true);
-        const correctChar = currentQuiz.correct;
+        const correctChar = currentQuiz.correct ? currentQuiz.correct.toString().toUpperCase().trim() : "O";
         showAnswerFeedback(char === correctChar, correctChar);
     }
 
+    // 💡 [단답형 파싱 오류 안전장치 탑재] 정답 배열(Array)과 평문(String) 데이터 타입 불일치 방지
     function judgeShortAnswer() {
         const input = document.getElementById('short-answer-input');
         const err = document.getElementById('input-error-msg');
@@ -1056,7 +1060,13 @@
             submitBtn.disabled = true;
         }
 
-        const correctAnswers = currentQuiz.correct;
+        let correctAnswers = currentQuiz.correct;
+        if (typeof correctAnswers === 'string') {
+            correctAnswers = correctAnswers.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0);
+        } else if (!Array.isArray(correctAnswers)) {
+            correctAnswers = [correctAnswers.toString()];
+        }
+
         const processedInput = val.replace(/\s+/g, '').toLowerCase();
         const isCorrect = correctAnswers.some(ans => {
             return processedInput === ans.replace(/\s+/g, '').toLowerCase();
@@ -1065,6 +1075,7 @@
         showAnswerFeedback(isCorrect, correctAnswers.join(" 또는 "));
     }
 
+    // 💡 [해설창 뭉개짐/유실 에러 완벽 해결] classList를 사용해 hidden 상태만 제거하고, 원래의 p-5 및 rounded-2xl 레이아웃 클래스들을 온전히 유지합니다.
     function showAnswerFeedback(isCorrect, answerString) {
         const feedback = document.getElementById('feedback');
         const fTitle = document.getElementById('feedback-title');
@@ -1075,10 +1086,12 @@
         if (isCorrect) {
             score++;
             fTitle.innerHTML = `<span class="text-emerald-500">⭕</span> 정답입니다! 멋진 실력이네요.`;
-            feedback.className = "feedback-box correct bg-emerald-50/50 border border-emerald-100 mt-6 slide-in text-emerald-950";
+            feedback.classList.remove('bg-rose-50/50', 'border-rose-100', 'text-rose-950');
+            feedback.classList.add('bg-emerald-50/50', 'border-emerald-100', 'text-emerald-950', 'mt-6');
         } else {
             fTitle.innerHTML = `<span class="text-rose-500">❌</span> 아쉽지만 틀렸습니다.`;
-            feedback.className = "feedback-box wrong bg-rose-50/50 border border-rose-100 mt-6 slide-in text-rose-950";
+            feedback.classList.remove('bg-emerald-50/50', 'border-emerald-100', 'text-emerald-950');
+            feedback.classList.add('bg-rose-50/50', 'border-rose-100', 'text-rose-950', 'mt-6');
         }
 
         fExpl.innerHTML = `<strong>정답: ${answerString}</strong><br><br>${currentQuiz.info}`;
@@ -1193,7 +1206,7 @@
         try {
             const virtualEmail = `${id}@readingquiz.com`;
             await createUserWithEmailAndPassword(auth, virtualEmail, pass);
-            openModalAlert("회원가입 성공", `'${id}' 선생님의 퀴즈방이 개설되었습니다. 자동으로 연결합니다!`, "🎉");
+            openModalAlert("회원가입 성공", `'${id}' 선생님 계정이 성공적으로 생성되었습니다. 자동으로 연결합니다!`, "🎉");
         } catch (error) {
             let userMsg = error.message;
             if (error.code === 'auth/email-already-in-use') userMsg = "이미 존재하는 선생님 ID입니다. 다른 ID를 선택해 주세요.";
@@ -1224,7 +1237,7 @@
             await signInAnonymously(auth);
             adminMainPanel.classList.add('hidden');
             adminAuthPanel.classList.remove('hidden');
-            openModalAlert("로그아웃 완료", "선생님 퀴즈방 세션이 안전하게 해제되었습니다.", "🔒");
+            openModalAlert("로그아웃 완료", "교사 대시보드 세션이 안전하게 해제되었습니다.", "🔒");
         } catch (error) {
             openModalAlert("오류", "로그아웃 진행 도중 문제가 발생했습니다: " + error.message);
         }
