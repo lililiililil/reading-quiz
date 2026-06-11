@@ -149,6 +149,42 @@
             cursor: not-allowed;
             color: var(--text-muted);
         }
+
+        /* 💡 [복원 완료] 피드백 영역의 오리지널 채점 상자 가독성 스타일링 */
+        .feedback-box {
+            border-radius: 20px;
+            padding: 24px;
+            text-align: left;
+            margin-top: 30px;
+        }
+        .feedback-box.correct {
+            background-color: var(--success-bg);
+            border: 2px solid #bbf7d0;
+            color: #14532d;
+        }
+        .feedback-box.wrong {
+            background-color: var(--error-bg);
+            border: 2px solid #fca5a5;
+            color: #7f1d1d;
+        }
+        .feedback-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .feedback-explanation {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.6);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center p-4 md:p-8">
@@ -169,12 +205,12 @@
             <p class="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto" id="intro-subtitle">서버의 독서 데이터베이스와 연동하여 무작위로 엄선된 퀴즈에 응시합니다.</p>
             
             <div class="mt-4 flex flex-wrap gap-2 justify-center">
-                <!-- 엑셀 샘플 양식 받기 -->
+                <!-- 샘플 다운로드 버튼 -->
                 <button id="download-sample-btn" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     엑셀 샘플 양식 받기
                 </button>
-                <!-- 💡 [워딩 리뉴얼] 교사용 관리자 화면 -> 우리 학교 퀴즈방 만들기 -->
+                <!-- 우리 학교 퀴즈방 만들기 버튼 -->
                 <button id="go-admin-btn" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     우리 학교 퀴즈방 만들기
@@ -266,10 +302,11 @@
         
         <div id="interactive-container" class="mb-5"></div>
         
-        <div id="feedback" class="feedback-box hidden p-5 rounded-2xl text-left slide-in">
-            <h3 class="feedback-title text-base font-extrabold mb-2 flex items-center gap-1.5" id="feedback-title"></h3>
-            <p class="feedback-explanation text-xs leading-relaxed bg-white/60 p-3.5 rounded-xl border border-slate-200/20 mb-4" id="explanation"></p>
-            <button class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm transition-colors" id="next-btn">다음으로 넘어가기</button>
+        <!-- 💡 [복원 완료] 정/오답 판정 및 본지 해설 연계 안내 상자 피드백 복원 -->
+        <div id="feedback" class="feedback-box hidden">
+            <h3 class="feedback-title" id="feedback-title"></h3>
+            <p class="feedback-explanation" id="feedback-explanation"></p>
+            <button class="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl text-sm transition-colors mt-4" id="next-btn">다음으로 넘어가기</button>
         </div>
     </div>
 
@@ -284,7 +321,7 @@
                 <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 서버 기록 보존 및 결과 확인
             </p>
-            <p class="text-[11px] text-slate-400 leading-relaxed mb-4">학업 결과는 교사용 실시간 데이터베이스에 영구 전송되었습니다. 필요 시 아래 결과를 복사하여 클립보드에 소장할 수도 있습니다.</p>
+            <p class="text-[11px] text-slate-400 leading-relaxed mb-4">학업 결과는 선생님 전용 데이터베이스에 안전하게 기록되었습니다. 필요시 아래 결과를 클립보드에 복사해 소장할 수도 있습니다.</p>
             <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-sm" id="btn-copy-result">
                 📋 인증 데이터 복사하기
             </button>
@@ -294,14 +331,14 @@
     </div>
 </div>
 
+<!-- 선생님 전용 공간 개설 및 관리 모달창 -->
 <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl transition-all scale-95 duration-200" id="admin-card">
         
         <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
             <div>
-                <!-- 💡 [워딩 리뉴얼] 우리 학교 퀴즈방 관리 도구 -->
-                <h2 class="text-lg font-extrabold text-slate-900" id="admin-main-title">우리 학교 퀴즈방 관리 도구</h2>
-                <p class="text-xs text-slate-400 mt-0.5" id="admin-header-subtitle">실시간 DB 데이터 확인 및 퀴즈 구성을 설계합니다.</p>
+                <h2 class="text-lg font-extrabold text-slate-900">선생님 전용 공간 개설</h2>
+                <p class="text-xs text-slate-400 mt-0.5" id="admin-header-subtitle">우리 학교 학생들만을 위한 독서 퀴즈 룸을 개설하고 관리합니다.</p>
             </div>
             <div class="flex items-center gap-2">
                 <!-- 로그아웃 버튼 -->
@@ -312,15 +349,15 @@
             </div>
         </div>
 
-        <!-- 💡 [워딩 리뉴얼] 아이디/비밀번호 간이 회원가입 및 로그인 패널 -->
+        <!-- 계정 관리 패널 -->
         <div class="p-10 flex flex-col items-center justify-center text-center space-y-4" id="admin-auth-panel">
             <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">🔒</div>
             <div>
-                <h3 class="font-bold text-slate-800 text-sm">선생님 전용 공간 개설</h3>
-                <p class="text-xs text-slate-400 mt-1">원하는 아이디와 비밀번호를 정해 로그인 또는 최초 회원가입을 하세요.</p>
+                <h3 class="font-bold text-slate-800 text-sm">우리 학교 독서 퀴즈룸 관리</h3>
+                <p class="text-xs text-slate-400 mt-1">원하는 선생님 아이디와 비밀번호를 입력해 퀴즈룸을 개설하거나 로그인하세요.</p>
             </div>
             <div class="w-full max-w-xs space-y-3">
-                <input type="text" id="admin-id-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="아이디 기입 (영어/숫자)">
+                <input type="text" id="admin-id-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="선생님 아이디 (영어/숫자)">
                 <input type="password" id="admin-pass-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="비밀번호 기입 (6자리 이상)">
                 
                 <div class="flex gap-2 pt-1">
@@ -506,7 +543,7 @@
                     } else {
                         loggedInTeacherId = "";
                         document.getElementById('btn-logout-admin').classList.add('hidden');
-                        document.getElementById('admin-header-subtitle').innerText = "실시간 DB 데이터 확인 및 퀴즈 구성을 설계합니다.";
+                        document.getElementById('admin-header-subtitle').innerText = "우리 학교 학생들만을 위한 독서 퀴즈 룸을 개설하고 관리합니다.";
 
                         if (currentTeacherId) {
                             isFirebaseActive = true;
@@ -557,7 +594,6 @@
         }
     }
 
-    // [UI 개선 완료] 꼬리표가 없을 때 경고창 대신 깔끔하고 명확하게 "로컬 엑셀 모드"를 브리핑합니다.
     function updateIntroView() {
         const studentEntryBox = document.getElementById('student-entry-box');
         const excelDropBox = document.getElementById('excel-drop-box');
@@ -575,7 +611,6 @@
             if (currentTeacherId) {
                 introSubtitle.innerText = `'${currentTeacherId}' 선생님의 퀴즈 저장소가 비어 있습니다. 관리자 패널을 통해 엑셀 문제를 업로드해 주세요.`;
             } else {
-                // 💡 문구를 부드럽고 가독성 좋게 정형화
                 introSubtitle.innerText = "엑셀 파일(.xlsx)을 아래에 업로드하시면 서버 연결 없이 즉시 퀴즈를 진행할 수 있습니다.";
             }
         }
@@ -638,6 +673,7 @@
         }
     });
 
+    // 💡 [듀얼 파서 탑재 완료] 구글 폼 다중 설문 스프레드시트 및 단일 10열 정형 엑셀을 완벽하게 동시 탐지 및 분리 파싱합니다.
     function handleFileSelect(file, isAdminUpload = false) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -653,67 +689,27 @@
                 }
 
                 const headers = sheetData[0];
-                const columnMapping = mapHeaders(headers);
+                const headerText = headers.map(h => h ? h.toString().replace(/\s+/g, "").toLowerCase() : "").join(",");
 
-                if (columnMapping.book === -1 || columnMapping.q === -1 || columnMapping.correct === -1) {
-                    openModalAlert("오류", "퀴즈 헤더 정보를 자동으로 찾지 못했습니다. 첫 행에 '책제목', '문제', '정답' 키워드가 들어 있는지 확인하세요.");
-                    return;
+                let parsedQuizzes = [];
+
+                if (headerText.includes("퀴즈1") || headerText.includes("[퀴즈1]") || headerText.includes("퀴즈2") || headerText.includes("퀴즈3")) {
+                    // 구글 폼 다중 파싱 모드 가동 (한 줄에 3개씩 들어있는 원본 학생 업로드 엑셀)
+                    parsedQuizzes = parseGoogleFormSheet(sheetData);
+                } else {
+                    // 정형화된 단일 10열 평면 엑셀 파서 모드 가동
+                    parsedQuizzes = parseFlatListSheet(sheetData);
                 }
 
-                let tempQuizzes = [];
-                for (let i = 1; i < sheetData.length; i++) {
-                    const row = sheetData[i];
-                    if (!row || row.length < 3) continue;
-
-                    const bookVal = row[columnMapping.book] ? row[columnMapping.book].toString().trim() : "";
-                    const questionVal = row[columnMapping.q] ? row[columnMapping.q].toString().trim() : "";
-                    
-                    if (!bookVal || !questionVal) continue; 
-
-                    let rawType = columnMapping.type !== -1 && row[columnMapping.type] ? row[columnMapping.type].toString().trim() : "";
-                    let resolvedType = "객관식";
-
-                    const tCheck = rawType.replace(/\s+/g, '').toLowerCase();
-                    if (tCheck.includes("ox") || tCheck.includes("오엑스") || tCheck.includes("참거짓")) {
-                        resolvedType = "OX";
-                    } else if (tCheck.includes("단답") || tCheck.includes("주관") || tCheck.includes("단답형") || tCheck.includes("short")) {
-                        resolvedType = "단답형";
-                    }
-
-                    const o1 = columnMapping.opt1 !== -1 && row[columnMapping.opt1] ? row[columnMapping.opt1].toString().trim() : "";
-                    const o2 = columnMapping.opt2 !== -1 && row[columnMapping.opt2] ? row[columnMapping.opt2].toString().trim() : "";
-                    const o3 = columnMapping.opt3 !== -1 && row[columnMapping.opt3] ? row[columnMapping.opt3].toString().trim() : "";
-                    const o4 = columnMapping.opt4 !== -1 && row[columnMapping.opt4] ? row[columnMapping.opt4].toString().trim() : "";
-
-                    const rawCorrect = row[columnMapping.correct];
-                    const cleanCorrect = sanitizeCorrectAnswer(rawCorrect, resolvedType);
-                    const explanationVal = columnMapping.info !== -1 && row[columnMapping.info] ? row[columnMapping.info].toString().trim() : "등록된 해설이 없는 문제입니다.";
-                    
-                    const rangeVal = columnMapping.range !== -1 && row[columnMapping.range] ? row[columnMapping.range].toString().trim() : "";
-
-                    tempQuizzes.push({
-                        book: bookVal,
-                        range: rangeVal,
-                        type: resolvedType,
-                        q: questionVal,
-                        option1: o1,
-                        option2: o2,
-                        option3: o3,
-                        option4: o4,
-                        correct: cleanCorrect,
-                        info: explanationVal
-                    });
-                }
-
-                if (tempQuizzes.length < 3) {
-                    openModalAlert("오류", "유효한 문제가 3개 미만입니다. 최소 3문제 이상 등록되어야 합니다.");
+                if (parsedQuizzes.length < 3) {
+                    openModalAlert("오류", "유효한 문제가 3개 미만입니다. 최소 3문제 이상 등록되어야 작동합니다.");
                     return;
                 }
 
                 if (isAdminUpload) {
-                    uploadQuizzesToDatabase(tempQuizzes, file.name);
+                    uploadQuizzesToDatabase(parsedQuizzes, file.name);
                 } else {
-                    allQuizzes = tempQuizzes;
+                    allQuizzes = parsedQuizzes;
                     document.getElementById('stat-total-count').innerText = `${allQuizzes.length}개`;
                     document.getElementById('local-ready-info').classList.remove('hidden');
                     dropzone.classList.add('hidden');
@@ -726,7 +722,211 @@
         reader.readAsArrayBuffer(file);
     }
 
-    function mapHeaders(headers) {
+    // A. 구글 폼 오리지널 다중 파싱 모듈
+    function parseGoogleFormSheet(sheetData) {
+        const headers = sheetData[0];
+        
+        let colBook = -1;
+        let colVolume = -1;
+        let colPages = -1;
+        
+        let q1_text = -1, q1_ans = -1, q1_info = -1;
+        let q2_text = -1, q2_ans = -1, q2_info = -1;
+        let q3_text = -1, q3_ans = -1, q3_info = -1;
+
+        headers.forEach((header, idx) => {
+            if (!header) return;
+            const hStr = header.toString().replace(/\s+/g, "").toLowerCase();
+
+            if (hStr.includes("정기간행물") || hStr.includes("책제목") || hStr.includes("도서명") || hStr.includes("잡지명")) colBook = idx;
+            else if (hStr.includes("발행호수") || hStr.includes("발행일") || hStr.includes("호수") || hStr.includes("발행호")) colVolume = idx;
+            else if (hStr.includes("출제페이지") || hStr.includes("페이지") || hStr.includes("범위")) colPages = idx;
+            
+            else if (hStr.includes("퀴즈1문제") || hStr.includes("[퀴즈1]문제") || (hStr.includes("퀴즈1") && hStr.includes("내용"))) q1_text = idx;
+            else if (hStr.includes("퀴즈1정답") || hStr.includes("[퀴즈1]정답") || (hStr.includes("퀴즈1") && hStr.includes("답"))) q1_ans = idx;
+            else if (hStr.includes("퀴즈1해설") || hStr.includes("[퀴즈1]해설") || (hStr.includes("퀴즈1") && hStr.includes("근거"))) q1_info = idx;
+
+            else if (hStr.includes("퀴즈2문제") || hStr.includes("[퀴즈2]문제") || (hStr.includes("퀴즈2") && hStr.includes("내용"))) q2_text = idx;
+            else if (hStr.includes("퀴즈2정답") || hStr.includes("[퀴즈2]정답") || (hStr.includes("퀴즈2") && hStr.includes("답"))) q2_ans = idx;
+            else if (hStr.includes("퀴즈2해설") || hStr.includes("[퀴즈2]해설") || (hStr.includes("퀴즈2") && hStr.includes("근거"))) q2_info = idx;
+
+            else if (hStr.includes("퀴즈3문제") || hStr.includes("[퀴즈3]문제") || (hStr.includes("퀴즈3") && hStr.includes("내용"))) q3_text = idx;
+            else if (hStr.includes("퀴즈3정답") || hStr.includes("[퀴즈3]정답") || (hStr.includes("퀴즈3") && hStr.includes("답"))) q3_ans = idx;
+            else if (hStr.includes("퀴즈3해설") || hStr.includes("[퀴즈3]해설") || (hStr.includes("퀴즈3") && hStr.includes("근거"))) q3_info = idx;
+        });
+
+        if (colBook === -1) colBook = 3;
+        if (colVolume === -1) colVolume = 4;
+        if (colPages === -1) colPages = 5;
+        if (q1_text === -1) q1_text = 6;
+        if (q1_ans === -1) q1_ans = 7;
+        if (q1_info === -1) q1_info = 8;
+        if (q2_text === -1) q2_text = 9;
+        if (q2_ans === -1) q2_ans = 10;
+        if (q2_info === -1) q2_info = 11;
+        if (q3_text === -1) q3_text = 12;
+        if (q3_ans === -1) q3_ans = 13;
+        if (q3_info === -1) q3_info = 14;
+
+        let quizzes = [];
+        for (let i = 1; i < sheetData.length; i++) {
+            const row = sheetData[i];
+            if (!row || row.length < 5) continue;
+
+            const rawBook = row[colBook] ? row[colBook].toString().trim() : "알 수 없는 잡지";
+            const rawVol = row[colVolume] ? row[colVolume].toString().trim() : "";
+            const bookTitle = rawVol ? `${rawBook} (${rawVol})` : rawBook;
+            const pages = row[colPages] ? row[colPages].toString().trim() : "";
+
+            if (q1_text !== -1 && row[q1_text]) {
+                const qObj = extractQuizData(row[q1_text], row[q1_ans], row[q1_info], bookTitle, pages);
+                if (qObj) quizzes.push(qObj);
+            }
+            if (q2_text !== -1 && row[q2_text]) {
+                const qObj = extractQuizData(row[q2_text], row[q2_ans], row[q2_info], bookTitle, pages);
+                if (qObj) quizzes.push(qObj);
+            }
+            if (q3_text !== -1 && row[q3_text]) {
+                const qObj = extractQuizData(row[q3_text], row[q3_ans], row[q3_info], bookTitle, pages);
+                if (qObj) quizzes.push(qObj);
+            }
+        }
+        return quizzes;
+    }
+
+    // B. 단일 퀴즈 평면 리스트 파서 모듈
+    function parseFlatListSheet(sheetData) {
+        const headers = sheetData[0];
+        const mapping = mapFlatHeaders(headers);
+
+        let quizzes = [];
+        for (let i = 1; i < sheetData.length; i++) {
+            const row = sheetData[i];
+            if (!row || row.length < 3) continue;
+
+            const bookVal = row[mapping.book] ? row[mapping.book].toString().trim() : "";
+            const questionVal = row[mapping.q] ? row[mapping.q].toString().trim() : "";
+            
+            if (!bookVal || !questionVal) continue; 
+
+            let rawType = mapping.type !== -1 && row[mapping.type] ? row[mapping.type].toString().trim() : "";
+            let resolvedType = "객관식";
+
+            const tCheck = rawType.replace(/\s+/g, '').toLowerCase();
+            if (tCheck.includes("ox") || tCheck.includes("오엑스") || tCheck.includes("참거짓")) {
+                resolvedType = "OX";
+            } else if (tCheck.includes("단답") || tCheck.includes("주관") || tCheck.includes("단답형") || tCheck.includes("short")) {
+                resolvedType = "단답형";
+            }
+
+            const o1 = mapping.opt1 !== -1 && row[mapping.opt1] ? row[mapping.opt1].toString().trim() : "";
+            const o2 = mapping.opt2 !== -1 && row[mapping.opt2] ? row[mapping.opt2].toString().trim() : "";
+            const o3 = mapping.opt3 !== -1 && row[mapping.opt3] ? row[mapping.opt3].toString().trim() : "";
+            const o4 = mapping.opt4 !== -1 && row[mapping.opt4] ? row[mapping.opt4].toString().trim() : "";
+
+            const rawCorrect = row[mapping.correct];
+            const cleanCorrect = sanitizeCorrectAnswer(rawCorrect, resolvedType);
+            const explanationVal = mapping.info !== -1 && row[mapping.info] ? row[mapping.info].toString().trim() : "등록된 해설이 없는 문제입니다.";
+            const rangeVal = mapping.range !== -1 && row[mapping.range] ? row[mapping.range].toString().trim() : "";
+
+            quizzes.push({
+                book: bookVal,
+                range: rangeVal,
+                type: resolvedType,
+                q: questionVal,
+                option1: o1,
+                option2: o2,
+                option3: o3,
+                option4: o4,
+                correct: cleanCorrect,
+                info: explanationVal
+            });
+        }
+        return quizzes;
+    }
+
+    // 💡 [지능형 추출 가동] 텍스트 내의 ①, ②, ③, ④ 혹은 1., 2. 패턴을 실시간 파싱하여 4지선다형으로 동적 분할합니다.
+    function extractQuizData(rawQ, rawAns, rawInfo, bookTitle, pages) {
+        if (!rawQ || !rawAns) return null;
+
+        const qText = rawQ.toString().trim();
+        const ansText = rawAns.toString().trim();
+        const infoText = rawInfo ? rawInfo.toString().trim() : "해설이 제공되지 않는 문항입니다.";
+
+        let type = "단답형";
+        let correct = ansText;
+        let options = ["", "", "", ""];
+
+        const oxPattern = /\[\s*ox\s*퀴즈\s*\]/i;
+        const hasOXPatt = oxPattern.test(qText);
+        const ansClean = ansText.toUpperCase().replace(/\s+/g, "");
+        const isOXAns = ansClean === "O" || ansClean === "X" || ansClean === "참" || ansClean === "거짓";
+
+        if (hasOXPatt || isOXAns) {
+            type = "OX";
+            correct = (ansClean === "O" || ansClean === "참" || ansClean === "1" || ansClean === "T") ? "O" : "X";
+        } else {
+            const optPatternA = /(?:①|1\.)\s*(.*?)\s*(?:②|2\.)\s*(.*?)\s*(?:③|3\.)\s*(.*?)\s*(?:④|4\.)\s*(.*)/s;
+            const match = qText.match(optPatternA);
+            
+            if (match) {
+                type = "객관식";
+                options = [
+                    match[1].trim(),
+                    match[2].trim(),
+                    match[3].trim(),
+                    match[4].trim()
+                ];
+                
+                const idxOpt = qText.search(/(?:①|1\.)/);
+                let cleanQuestion = qText;
+                if (idxOpt !== -1) {
+                    cleanQuestion = qText.substring(0, idxOpt).trim();
+                }
+
+                let ansNum = 1;
+                const cleanAns = ansText.replace(/\s+/g, "");
+                if (cleanAns.includes("①") || cleanAns.includes("1")) ansNum = 1;
+                else if (cleanAns.includes("②") || cleanAns.includes("2")) ansNum = 2;
+                else if (cleanAns.includes("③") || cleanAns.includes("3")) ansNum = 3;
+                else if (cleanAns.includes("④") || cleanAns.includes("4")) ansNum = 4;
+                
+                correct = ansNum;
+
+                return {
+                    book: bookTitle,
+                    range: pages,
+                    type: type,
+                    q: cleanQuestion,
+                    option1: options[0],
+                    option2: options[1],
+                    option3: options[2],
+                    option4: options[3],
+                    correct: correct,
+                    info: infoText
+                };
+            }
+        }
+
+        if (type === "단답형") {
+            correct = ansText.split(",").map(a => a.trim()).filter(a => a.length > 0);
+        }
+
+        return {
+            book: bookTitle,
+            range: pages,
+            type: type,
+            q: qText,
+            option1: "",
+            option2: "",
+            option3: "",
+            option4: "",
+            correct: correct,
+            info: infoText
+        };
+    }
+
+    function mapFlatHeaders(headers) {
         let mapping = { book: -1, type: -1, q: -1, opt1: -1, opt2: -1, opt3: -1, opt4: -1, correct: -1, info: -1, range: -1 };
         
         headers.forEach((h, idx) => {
@@ -798,50 +998,7 @@
         return mapping;
     }
 
-    function sanitizeCorrectAnswer(val, type) {
-        if (val === undefined || val === null) return type === "OX" ? "O" : (type === "객관식" ? 1 : [""]);
-        let cleaned = val.toString().trim();
-
-        if (type === "OX") {
-            let uc = cleaned.toUpperCase().replace(/\s+/g, '');
-            if (uc.includes("O") || uc.includes("참") || uc.includes("T") || uc === "1" || uc === "YES") return "O";
-            if (uc.includes("X") || uc.includes("거짓") || uc.includes("F") || uc === "2" || uc === "NO") return "X";
-            return "O";
-        }
-        if (type === "객관식") {
-            let uc = cleaned.replace(/\s+/g, '');
-            if (uc.includes("①") || uc.includes("1")) return 1;
-            if (uc.includes("②") || uc.includes("2")) return 2;
-            if (uc.includes("③") || uc.includes("3")) return 3;
-            if (uc.includes("④") || uc.includes("4")) return 4;
-            return 1;
-        }
-        if (type === "단답형") {
-            return cleaned.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0);
-        }
-        return cleaned;
-    }
-
-    // 💡 [안전 수정] 엑셀 샘플에 출제범위 열이 정상 포함되도록 수정
-    document.getElementById('download-sample-btn').onclick = (e) => {
-        e.preventDefault();
-        const data = [
-            ["책제목", "문제유형", "출제범위", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"],
-            ["어린 왕자", "객관식", "1장 ~ 3장", "어린 왕자의 고향 행성 이름은 무엇일까요?", "B612", "A101", "지구", "화성", "1", "어린 왕자는 소행성 B612에서 왔습니다."],
-            ["데미안", "OX", "p.45 ~ p.80", "싱클레어가 알에서 깨어나기 위해 만난 주인공의 정신적 멘토는 크로머이다.", "O", "X", "", "", "X", "싱클레어의 멘토는 크로머가 아니라 데미안입니다."],
-            ["1984", "단답형", "제 1부 전체", "작품 속에서 당과 사회를 철저히 감시하는 독재적 감시 시스템 및 가상의 지배자 이름은?", "", "", "", "", "빅 브라더, 빅브라더", "빅 브라더(Big Brother)는 사회를 철저히 지배하고 감시하는 독재자입니다."],
-            ["변신", "OX", "프롤로그", "주인공 그레고르 잠자는 어느 날 아침 침대에서 깨어났을 때 흉측한 갑충으로 변해 있었다.", "O", "X", "", "", "O", "그레고르 잠자는 거대한 벌레로 일순간 변했습니다."]
-        ];
-        try {
-            const worksheet = XLSX.utils.aoa_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "독서퀴즈_샘플양식");
-            XLSX.writeFile(workbook, "독서퀴즈_지능형_샘플양식.xlsx");
-        } catch (error) {
-            openModalAlert("오류", "샘플 다운로드 도중 에러가 발생했습니다: " + error.message);
-        }
-    };
-
+    // 1. [서버 모드] 학생 시작 버튼 클릭 시
     document.getElementById('btn-start-quiz').onclick = async () => {
         const idInput = document.getElementById('student-id');
         const nameInput = document.getElementById('student-name');
@@ -902,6 +1059,7 @@
         }
     };
 
+    // 2. [로컬 모드] 학생 시작 버튼 클릭 시
     document.getElementById('btn-start-local-quiz').onclick = () => {
         const idInput = document.getElementById('local-student-id');
         const nameInput = document.getElementById('local-student-name');
@@ -1027,22 +1185,19 @@
         }
     }
 
-    // 💡 [타입 불일치 방지 보정] 문자열 형태의 정답과 정수형 인덱스(idx) 대조가 어긋나지 않도록 parseInt 안전장치 결합
     function judgeChoiceAnswer(idx) {
         document.querySelectorAll('.option-button').forEach(b => b.disabled = true);
         const correctNum = parseInt(currentQuiz.correct);
-        const arr = [currentQuiz.option1, currentQuiz.option2, currentQuiz.option3, currentQuiz.option4];
-        showAnswerFeedback(idx === correctNum, `${correctNum}번 (${arr[correctNum - 1]})`);
+        showFeedback(idx === correctNum);
     }
 
-    // 💡 [OX 대소문자 예외 방지 보정]
     function judgeOXAnswer(char) {
         document.querySelectorAll('.ox-button').forEach(b => b.disabled = true);
-        const correctChar = currentQuiz.correct ? currentQuiz.correct.toString().toUpperCase().trim() : "O";
-        showAnswerFeedback(char === correctChar, correctChar);
+        const correctChar = currentQuiz.correct.toString().trim().toUpperCase();
+        const studentChar = char.toString().trim().toUpperCase();
+        showFeedback(studentChar === correctChar);
     }
 
-    // 💡 [단답형 파싱 오류 안전장치 탑재] 정답 배열(Array)과 평문(String) 데이터 타입 불일치 방지
     function judgeShortAnswer() {
         const input = document.getElementById('short-answer-input');
         const err = document.getElementById('input-error-msg');
@@ -1060,42 +1215,52 @@
             submitBtn.disabled = true;
         }
 
-        let correctAnswers = currentQuiz.correct;
-        if (typeof correctAnswers === 'string') {
-            correctAnswers = correctAnswers.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0);
-        } else if (!Array.isArray(correctAnswers)) {
-            correctAnswers = [correctAnswers.toString()];
+        const processedInput = val.replace(/\s+/g, '').toLowerCase();
+        let isCorrect = false;
+        
+        if (Array.isArray(currentQuiz.correct)) {
+            isCorrect = currentQuiz.correct.some(ans => {
+                return processedInput === ans.toString().replace(/\s+/g, '').toLowerCase();
+            });
+        } else {
+            isCorrect = processedInput === currentQuiz.correct.toString().replace(/\s+/g, '').toLowerCase();
         }
 
-        const processedInput = val.replace(/\s+/g, '').toLowerCase();
-        const isCorrect = correctAnswers.some(ans => {
-            return processedInput === ans.replace(/\s+/g, '').toLowerCase();
-        });
-
-        showAnswerFeedback(isCorrect, correctAnswers.join(" 또는 "));
+        showFeedback(isCorrect);
     }
 
-    // 💡 [해설창 뭉개짐/유실 에러 완벽 해결] classList를 사용해 hidden 상태만 제거하고, 원래의 p-5 및 rounded-2xl 레이아웃 클래스들을 온전히 유지합니다.
-    function showAnswerFeedback(isCorrect, answerString) {
-        const feedback = document.getElementById('feedback');
+    // 💡 [해설 정밀 복원 가동] 정오답 상태를 정확히 비교 분석하여 수려한 카드 형태로 본문 출처 해설을 하단에 팝업합니다.
+    function showFeedback(isCorrect) {
+        const feedbackBox = document.getElementById('feedback');
         const fTitle = document.getElementById('feedback-title');
-        const fExpl = document.getElementById('explanation');
+        const fExplanation = document.getElementById('feedback-explanation');
 
-        feedback.classList.remove('hidden');
+        let correctStr = "";
+        if (currentQuiz.type === "객관식") {
+            const optNum = parseInt(currentQuiz.correct);
+            const optText = currentQuiz["option" + optNum] || "";
+            correctStr = `${optNum}번. ${optText}`;
+        } else if (currentQuiz.type === "OX") {
+            correctStr = currentQuiz.correct;
+        } else {
+            correctStr = Array.isArray(currentQuiz.correct) ? currentQuiz.correct.join(", ") : currentQuiz.correct;
+        }
+
+        feedbackBox.classList.remove('hidden');
 
         if (isCorrect) {
             score++;
-            fTitle.innerHTML = `<span class="text-emerald-500">⭕</span> 정답입니다! 멋진 실력이네요.`;
-            feedback.classList.remove('bg-rose-50/50', 'border-rose-100', 'text-rose-950');
-            feedback.classList.add('bg-emerald-50/50', 'border-emerald-100', 'text-emerald-950', 'mt-6');
+            fTitle.innerHTML = `<span>⭕</span> 정답입니다! 아주 훌륭해요.`;
+            feedbackBox.className = "feedback-box correct";
         } else {
-            fTitle.innerHTML = `<span class="text-rose-500">❌</span> 아쉽지만 틀렸습니다.`;
-            feedback.classList.remove('bg-emerald-50/50', 'border-emerald-100', 'text-emerald-950');
-            feedback.classList.add('bg-rose-50/50', 'border-rose-100', 'text-rose-950', 'mt-6');
+            fTitle.innerHTML = `<span>❌</span> 아쉽게도 틀렸습니다.`;
+            feedbackBox.className = "feedback-box wrong";
         }
 
-        fExpl.innerHTML = `<strong>정답: ${answerString}</strong><br><br>${currentQuiz.info}`;
-        feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        fExplanation.innerHTML = `<strong>정답: ${correctStr}</strong><br><br>${currentQuiz.info}`;
+
+        // 해설 영역으로 부드럽게 스크롤링
+        feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     document.getElementById('next-btn').onclick = () => {
@@ -1330,15 +1495,6 @@
         );
     };
 
-    const adminExcelInput = document.getElementById('admin-excel-file');
-    adminExcelInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            document.getElementById('admin-selected-filename').innerText = file.name;
-            handleFileSelect(file, true);
-        }
-    });
-
     async function uploadQuizzesToDatabase(quizzesList, filename) {
         if (!isFirebaseActive || !user || !loggedInTeacherId) {
             openModalAlert("전송 실패", "현재 교사 세션이 올바르지 않습니다.");
@@ -1360,7 +1516,7 @@
                     await addDoc(qRef, q);
                 }
 
-                openModalAlert("전송 완료", "성공적으로 데이터베이스 퀴즈 질문지가 덮어쓰기 완료되었습니다. 전용 주소를 학생들에게 안내해 주세요.", "🎉");
+                openModalAlert("전송 완료", "성공적으로 모든 독서 퀴즈 질문지가 덮어쓰기 완료되었습니다. 이제 학생들이 퀴즈방 주소로 바로 시험을 치를 수 있습니다.", "🎉");
                 await refreshAdminDashboard();
                 await checkServerQuizStatus();
 
