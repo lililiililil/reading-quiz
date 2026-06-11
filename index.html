@@ -294,34 +294,55 @@
     </div>
 </div>
 
+<!-- 교사 전용 복합 모달창 -->
 <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl transition-all scale-95 duration-200" id="admin-card">
         
         <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
             <div>
                 <h2 class="text-lg font-extrabold text-slate-900">교사 전용 관리자 화면</h2>
-                <p class="text-xs text-slate-400 mt-0.5">실시간 DB 데이터 확인 및 퀴즈 구성을 설계합니다.</p>
+                <p class="text-xs text-slate-400 mt-0.5" id="admin-header-subtitle">실시간 DB 데이터 확인 및 퀴즈 구성을 설계합니다.</p>
             </div>
-            <button class="p-1 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors" id="close-admin-btn">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- 로그아웃 버튼 -->
+                <button id="btn-logout-admin" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 font-semibold px-2.5 py-1.5 rounded-lg hidden">로그아웃</button>
+                <button class="p-1 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors" id="close-admin-btn">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
         </div>
 
+        <!-- 💡 [개선 완료] 아이디/비밀번호 간이 회원가입 및 로그인 패널 설계 -->
         <div class="p-10 flex flex-col items-center justify-center text-center space-y-4" id="admin-auth-panel">
             <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">🔒</div>
             <div>
-                <h3 class="font-bold text-slate-800 text-sm">관리자 비밀번호 확인</h3>
-                <p class="text-xs text-slate-400 mt-1">접근을 위해 사전에 정의된 관리자 보안 코드를 입력해 주십시오.</p>
+                <h3 class="font-bold text-slate-800 text-sm">교사 통합 계정 관리</h3>
+                <p class="text-xs text-slate-400 mt-1">원하는 아이디와 비밀번호를 정해 로그인 또는 최초 회원가입을 하세요.</p>
             </div>
-            <div class="w-full max-w-xs space-y-2">
-                <input type="password" id="admin-pass-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="비밀번호 기입 (기본: admin123)">
-                <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs" id="btn-submit-auth">인증 진행</button>
-                <p class="text-[10px] text-red-500 font-bold hidden" id="auth-err-msg">비밀번호가 일치하지 않습니다. 다시 시도하세요.</p>
+            <div class="w-full max-w-xs space-y-3">
+                <input type="text" id="admin-id-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="아이디 기입 (영어/숫자)">
+                <input type="password" id="admin-pass-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="비밀번호 기입 (6자리 이상)">
+                
+                <div class="flex gap-2 pt-1">
+                    <button class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs shadow-md shadow-indigo-50" id="btn-login-admin">교사 로그인</button>
+                    <button class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs" id="btn-signup-admin">새 회원가입</button>
+                </div>
             </div>
         </div>
 
+        <!-- 실제 관리자 패널 메인 바디 -->
         <div class="p-6 overflow-y-auto flex-1 space-y-6 hidden" id="admin-main-panel">
             
+            <!-- 💡 [추가 완료] 선생님 전용 공지 링크 복사 상자 추가 -->
+            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-left">
+                <span class="text-[10px] font-bold text-indigo-700 uppercase flex items-center gap-1">🔗 우리 반 학생 전용 안내 주소</span>
+                <p class="text-[11px] text-indigo-900/60 mb-2">아래의 링크를 복사하여 학생들에게 배포하면 내 문제셋으로 즉시 연결됩니다.</p>
+                <div class="flex gap-2">
+                    <input type="text" id="admin-share-link" class="w-full bg-white border border-indigo-200 rounded-lg px-3 py-2 text-xs outline-none font-medium text-slate-700" readonly>
+                    <button id="btn-copy-share-link" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-lg text-xs flex-shrink-0 transition-colors">링크 복사</button>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4">
                     <span class="text-[10px] font-bold text-indigo-700 uppercase">서버 퀴즈 질문</span>
@@ -373,11 +394,12 @@
                                 <th class="px-4 py-3">이름</th>
                                 <th class="px-4 py-3 text-center">정답수</th>
                                 <th class="px-4 py-3">해결일시</th>
+                                <th class="px-4 py-3 text-center">관리</th> <!-- 💡 헤더 셀 병합 개수 추가 -->
                             </tr>
                         </thead>
                         <tbody id="admin-results-table" class="divide-y divide-slate-100 text-slate-700">
                             <tr>
-                                <td colspan="4" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td>
+                                <td colspan="5" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -402,11 +424,11 @@
 <script type="module">
     // Firebase Web SDK 라이브러리 모듈 호출 (v11.6.1 기반)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // 1. 글로벌 환경 설정
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-book-quiz';
+    const appId = 'default-book-quiz';
     const firebaseConfig = {
         apiKey: "AIzaSyDpO7h9rUFpzPROfVnKzhjpbRqAtgu5fAw",
         authDomain: "reading-quiz-e2281.firebaseapp.com",
@@ -416,12 +438,15 @@
         appId: "1:62774260837:web:28875bd9de0d8028d3c28c",
         measurementId: "G-K05Q5G75SH"
     };
-    const adminPasswordDefault = "sangwoolib";
 
     let db = null;
     let auth = null;
     let user = null;
     let isFirebaseActive = false;
+
+    // 💡 [추가 완료] 다중 선생님 라우팅을 위한 코어 제어 변수 선언
+    let currentTeacherId = ""; // URL 주소로 들어온 선생님 코드 (?id=아이디)
+    let loggedInTeacherId = ""; // 현재 관리자 패널에 로그인한 선생님 코드
 
     // 퀴즈 관련 동적 변수
     let allQuizzes = [];
@@ -432,12 +457,14 @@
     let studentId = "";
     let studentName = "";
 
-    // 2. DOM 로딩 시 초기화 실행
+    // 2. DOM 로딩 시 초기화 및 URL 파라미터 획득 실행
     window.onload = async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentTeacherId = urlParams.get('id') ? urlParams.get('id').trim() : "";
         await initFirebaseConnection();
     };
 
-    // Firebase 통신 활성화 및 로그인
+    // Firebase 통신 활성화 및 오토 로그인
     async function initFirebaseConnection() {
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
@@ -456,27 +483,51 @@
             auth = getAuth(app);
             db = getFirestore(app);
 
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
+            // 최초 진입 시 익명 토큰 발행 활성화 (학생용 보호장치)
+            if (!auth.currentUser) {
                 await signInAnonymously(auth);
             }
 
+            // 인증 상태 변화 실시간 옵저빙 가동
             onAuthStateChanged(auth, async (u) => {
                 if (u) {
                     user = u;
-                    isFirebaseActive = true;
-                    statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-                    statusText.innerText = "실시간 서버 통신 활성화됨";
-                    connectionStatus.classList.add('bg-emerald-50', 'text-emerald-700');
-                    connectionStatus.classList.remove('bg-slate-100', 'text-slate-500');
+                    
+                    if (!u.isAnonymous) {
+                        // [선생님 로그인 상태 전환 부]
+                        loggedInTeacherId = u.email.split('@')[0];
+                        isFirebaseActive = true;
+                        
+                        document.getElementById('btn-logout-admin').classList.remove('hidden');
+                        document.getElementById('admin-header-subtitle').innerText = `[${loggedInTeacherId} 선생님] 계정으로 연결됨`;
+                        document.getElementById('admin-auth-panel').classList.add('hidden');
+                        document.getElementById('admin-main-panel').classList.remove('hidden');
 
-                    await checkServerQuizStatus();
-                } else {
-                    statusDot.className = "w-2 h-2 rounded-full bg-red-500";
-                    statusText.innerText = "서버 인증 누락";
-                    isFirebaseActive = false;
-                    updateIntroView();
+                        // 전용 주소값 바인딩
+                        const shareUrl = `${window.location.origin}${window.location.pathname}?id=${loggedInTeacherId}`;
+                        document.getElementById('admin-share-link').value = shareUrl;
+
+                        await refreshAdminDashboard();
+                    } else {
+                        // [학생 또는 비로그인 상태 전환 부]
+                        loggedInTeacherId = "";
+                        document.getElementById('btn-logout-admin').classList.add('hidden');
+                        document.getElementById('admin-header-subtitle').innerText = "실시간 DB 데이터 확인 및 퀴즈 구성을 설계합니다.";
+
+                        if (currentTeacherId) {
+                            isFirebaseActive = true;
+                            statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                            statusText.innerText = `실시간 서버 연결됨 (선생님 ID: ${currentTeacherId})`;
+                            connectionStatus.classList.add('bg-emerald-50', 'text-emerald-700');
+                            connectionStatus.classList.remove('bg-slate-100', 'text-slate-500');
+                            await checkServerQuizStatus();
+                        } else {
+                            statusDot.className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse";
+                            statusText.innerText = "공통 링크 접속 (로컬 모드)";
+                            isFirebaseActive = false;
+                            updateIntroView();
+                        }
+                    }
                 }
             });
 
@@ -490,13 +541,14 @@
     }
 
     async function checkServerQuizStatus() {
-        if (!isFirebaseActive || !user) {
+        if (!isFirebaseActive || !currentTeacherId) {
             updateIntroView();
             return;
         }
 
         try {
-            const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'quizzes');
+            // 💡 [구조 변환 완료] 각 선생님의 고유 노드 하위 디렉토리에서 문제 로드하도록 설정
+            const qRef = collection(db, 'artifacts', appId, 'teachers', currentTeacherId, 'quizzes');
             const snap = await getDocs(qRef);
             
             allQuizzes = [];
@@ -521,15 +573,15 @@
         if (isFirebaseActive && allQuizzes.length >= 3) {
             excelDropBox.classList.add('hidden');
             studentEntryBox.classList.remove('hidden');
-            serverQuizInfo.innerText = `서버에 총 ${allQuizzes.length}개의 독서 퀴즈가 준비되어 있습니다.`;
-            introSubtitle.innerText = "학번과 이름을 입력하면 바로 임의의 3문제 퀴즈에 응시할 수 있습니다.";
+            serverQuizInfo.innerText = `'${currentTeacherId}' 선생님 방에 총 ${allQuizzes.length}개의 퀴즈가 구동 중입니다.`;
+            introSubtitle.innerText = "학번과 이름을 입력하면 바로 무작위 3문항 독서 퀴즈에 응시할 수 있습니다.";
         } else {
             studentEntryBox.classList.add('hidden');
             excelDropBox.classList.remove('hidden');
-            if (isFirebaseActive) {
-                introSubtitle.innerText = "서버 데이터베이스가 비어 있습니다. 우측 상단 '교사용 관리자 화면'을 통해 퀴즈를 엑셀로 일괄 업로드 해주세요.";
+            if (currentTeacherId) {
+                introSubtitle.innerText = `⚠️ '${currentTeacherId}' 선생님의 퀴즈 저장소가 비어 있습니다. 관리자 패널을 통해 문제를 채워주세요.`;
             } else {
-                introSubtitle.innerText = "로컬 환경에서 구글 폼 엑셀을 드롭한 후 개별 학생 퀴즈를 수행합니다.";
+                introSubtitle.innerText = "⚠️ 선생님 전용 링크(?id=아이디)로 접속하지 않았습니다. 관리자 패널에서 가입 후 전용 주소를 생성하거나, 아래에 파일로 직접 실행할 수 있습니다.";
             }
         }
     }
@@ -679,7 +731,6 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // 엑셀 헤더 칼럼 분석 알고리즘 (9열과 10열 업로드 시 꼬임 현상 원천 방지)
     function mapHeaders(headers) {
         let mapping = { book: -1, type: -1, q: -1, opt1: -1, opt2: -1, opt3: -1, opt4: -1, correct: -1, info: -1, range: -1 };
         
@@ -720,15 +771,13 @@
         });
 
         let isTimestampPresent = false;
-        if (headers[0] && (headers[0].toString().includes("타임") || headers[0].toString().includes("Time") || headers[0].toString().includes("시간"))) {
+        if (headers[0] && (headers[0].toString().includes("타임") || headers[0].toString().includes("시간"))) {
             isTimestampPresent = true;
         }
         let offset = isTimestampPresent ? 1 : 0;
         let actualLength = headers.length - offset;
 
-        // 업로드된 엑셀 열 길이에 맞추어 순차 Fallback 인덱스를 스마트 매핑함으로써 데이터 밀림 오류를 원천 차단합니다.
         if (actualLength >= 10 || mapping.range !== -1) {
-            // 10열 레이아웃: ["책제목", "문제유형", "출제범위", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"]
             if (mapping.book === -1) mapping.book = offset + 0;
             if (mapping.type === -1) mapping.type = offset + 1;
             if (mapping.range === -1) mapping.range = offset + 2;
@@ -740,7 +789,6 @@
             if (mapping.correct === -1) mapping.correct = offset + 8;
             if (mapping.info === -1) mapping.info = offset + 9;
         } else {
-            // 9열 레이아웃: ["책제목", "문제유형", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"]
             if (mapping.book === -1) mapping.book = offset + 0;
             if (mapping.type === -1) mapping.type = offset + 1;
             if (mapping.q === -1) mapping.q = offset + 2;
@@ -779,27 +827,7 @@
         return cleaned;
     }
 
-    // 엑셀 파일 샘플 다운로드 양식 고도화
-    document.getElementById('download-sample-btn').onclick = (e) => {
-        e.preventDefault();
-        const data = [
-            ["책제목", "문제유형", "출제범위", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"],
-            ["어린 왕자", "객관식", "1장 ~ 3장", "어린 왕자의 고향 행성 이름은 무엇일까요?", "B612", "A101", "지구", "화성", "1", "어린 왕자는 소행성 B612에서 왔습니다."],
-            ["데미안", "OX", "p.45 ~ p.80", "싱클레어가 알에서 깨어나기 위해 만난 주인공의 정신적 멘토는 크로머이다.", "O", "X", "", "", "X", "싱클레어의 멘토는 크로머가 아니라 데미안입니다."],
-            ["1984", "단답형", "제 1부 전체", "작품 속에서 당과 사회를 철저히 감시하는 독재적 감시 시스템 및 가상의 지배자 이름은?", "", "", "", "", "빅 브라더, 빅브라더", "빅 브라더(Big Brother)는 사회를 철저히 지배하고 감시하는 독재자입니다."],
-            ["변신", "OX", "프롤로그", "주인공 그레고르 잠자는 어느 날 아침 침대에서 깨어났을 때 흉측한 갑충으로 변해 있었다.", "O", "X", "", "", "O", "그레고르 잠자는 거대한 벌레로 일순간 변했습니다."]
-        ];
-        try {
-            const worksheet = XLSX.utils.aoa_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "독서퀴즈_샘플양식");
-            XLSX.writeFile(workbook, "독서퀴즈_지능형_샘플양식.xlsx");
-        } catch (error) {
-            openModalAlert("오류", "샘플 다운로드 도중 에러가 발생했습니다: " + error.message);
-        }
-    };
-
-    // 1. [서버 모드] 학생 시작 버튼 클릭 시 (💡 중복 참여 검사 및 버튼 대기 상태 추가)
+    // 1. [서버 모드] 학생 시작 버튼 클릭 시
     document.getElementById('btn-start-quiz').onclick = async () => {
         const idInput = document.getElementById('student-id');
         const nameInput = document.getElementById('student-name');
@@ -815,15 +843,14 @@
         }
         if (errorMsg) errorMsg.classList.add('hidden');
         
-        // 버튼 비활성화 및 로딩 메시지 표기
         const originalBtnText = btn.innerText;
         btn.innerText = "중복 참여 여부 확인 중...";
         btn.disabled = true;
         
         try {
-            // Firestore 데이터베이스를 조회하여 중복 학생이 있는지 대조 (규칙 2 준수: 인메모리 소팅)
-            if (isFirebaseActive && user && db) {
-                const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+            if (isFirebaseActive && user && db && currentTeacherId) {
+                // 💡 [선생님방 격리 분리] 해당 담당 선생님 링크 안의 결과 컬렉션만 정확하게 조회 대조
+                const resultsRef = collection(db, 'artifacts', appId, 'teachers', currentTeacherId, 'results');
                 const snap = await getDocs(resultsRef);
                 
                 let alreadyParticipated = false;
@@ -844,14 +871,13 @@
                     const dateFormatted = new Date(pastRecord.timestamp).toLocaleString('ko-KR');
                     openModalAlert(
                         "응시 완료 안내",
-                        `이미 이 독서 퀴즈에 참여한 이력이 있습니다.\n\n• 학번/이름: ${pastRecord.studentId} ${pastRecord.studentName}\n• 기존 성적: 3문제 중 ${pastRecord.score}문제 정답\n• 응시 일시: ${dateFormatted}\n\n동일한 학번으로는 중복 도전하실 수 없습니다.`,
+                        `이미 이 독서 퀴즈에 참여한 이력이 있습니다.\n\n• 학번/이름: ${pastRecord.studentId} ${pastRecord.studentName}\n• 기존 성적: 3문제 중 ${pastRecord.score}문제 정답\n• 응시 일시: ${dateFormatted}\n\n중복 도전하실 수 없습니다.`,
                         "🚫"
                     );
                     return;
                 }
             }
 
-            // 중복 이력이 없으면 퀴즈 시작
             btn.innerText = originalBtnText;
             btn.disabled = false;
             startQuizWorkflow();
@@ -889,7 +915,6 @@
         loadQuizRound();
     }
 
-    // 퀴즈 렌더링 컨트롤러
     function loadQuizRound() {
         if (currentRound > 3) {
             finishQuizWorkflow();
@@ -908,7 +933,6 @@
         document.getElementById('question').innerText = currentQuiz.q;
         document.getElementById('quiz-type-badge').innerText = currentQuiz.type;
 
-        // 범위(Range) 데이터 유무 판별 후 화면 출력 연출
         const rangeBadge = document.getElementById('quiz-range-badge');
         if (currentQuiz.range && currentQuiz.range.toString().trim() !== "") {
             rangeBadge.innerText = currentQuiz.range;
@@ -974,7 +998,6 @@
             err.className = 'hidden text-xs text-rose-500 font-semibold mt-1 mb-3';
             err.innerText = '한 글자 이상 반드시 적어주세요!';
 
-            // 답안 제출용 버튼 스타일을 다른 인디고 색상 버튼들과 통일하고, 비활성화 효과까지 결합했습니다.
             const submit = document.createElement('button');
             submit.className = 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all duration-200 text-sm shadow-md shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed';
             submit.innerText = '답안 제출';
@@ -1005,7 +1028,6 @@
         showAnswerFeedback(char === correctChar, correctChar);
     }
 
-    // 채점 및 평가 함수 (단답형)
     function judgeShortAnswer() {
         const input = document.getElementById('short-answer-input');
         const err = document.getElementById('input-error-msg');
@@ -1018,7 +1040,6 @@
         err.classList.add('hidden');
         input.disabled = true;
 
-        // 주관식 정답 채점 시 제출용 버튼도 비활성화 처리해 중복 제출을 막아줍니다.
         const submitBtn = input.parentNode.querySelector('button');
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -1078,9 +1099,10 @@
 
         document.getElementById('final-score').innerText = `${studentId} ${studentName} 학생은 3문제 중 총 ${score}문제를 해결했습니다.`;
 
-        if (isFirebaseActive && user && db) {
+        // 💡 [선생님방 격리 분리] 응시가 끝나면 꼬리표로 들고있던 해당 선생님 컬렉션 방으로 성적 전송
+        if (isFirebaseActive && user && db && currentTeacherId) {
             try {
-                const resultRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+                const resultRef = collection(db, 'artifacts', appId, 'teachers', currentTeacherId, 'results');
                 await addDoc(resultRef, {
                     studentId: studentId,
                     studentName: studentName,
@@ -1122,20 +1144,22 @@
         document.body.removeChild(textarea);
     };
 
+    // ==================== [교사 관리자 패널 관련 제어 모듈] ====================
     const adminModal = document.getElementById('admin-modal');
     const adminCard = document.getElementById('admin-card');
     const adminAuthPanel = document.getElementById('admin-auth-panel');
     const adminMainPanel = document.getElementById('admin-main-panel');
-    const authErrMsg = document.getElementById('auth-err-msg');
 
     document.getElementById('go-admin-btn').onclick = () => {
         adminModal.classList.remove('hidden');
         setTimeout(() => adminCard.classList.remove('scale-95'), 10);
         
-        if (adminMainPanel.classList.contains('hidden')) {
+        if (!loggedInTeacherId) {
             adminAuthPanel.classList.remove('hidden');
+            adminMainPanel.classList.add('hidden');
+            document.getElementById('admin-id-input').value = '';
             document.getElementById('admin-pass-input').value = '';
-            document.getElementById('admin-pass-input').focus();
+            document.getElementById('admin-id-input').focus();
         }
     };
 
@@ -1144,37 +1168,86 @@
         setTimeout(() => adminModal.classList.add('hidden'), 200);
     };
 
-    document.getElementById('btn-submit-auth').onclick = async () => {
-        submitAdminAuth();
-    };
-    document.getElementById('admin-pass-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') submitAdminAuth();
-    });
-
-    async function submitAdminAuth() {
-        const input = document.getElementById('admin-pass-input').value;
-        if (input === adminPasswordDefault) {
-            authErrMsg.classList.add('hidden');
-            adminAuthPanel.classList.add('hidden');
-            adminMainPanel.classList.remove('hidden');
-            await refreshAdminDashboard();
-        } else {
-            authErrMsg.classList.remove('hidden');
+    // 💡 [기능 바인딩 완료] 간이 아이디 회원가입 기능 액션 로직
+    document.getElementById('btn-signup-admin').onclick = async () => {
+        const id = document.getElementById('admin-id-input').value.trim();
+        const pass = document.getElementById('admin-pass-input').value.trim();
+        
+        if (!id || !pass) {
+            openModalAlert("입력 확인", "아이디와 비밀번호를 모두 입력해 주십시오.");
+            return;
         }
-    }
+        if (pass.length < 6) {
+            openModalAlert("보안 경고", "비밀번호는 최소 6자리 이상이어야 보호 수준이 유지됩니다.");
+            return;
+        }
 
+        try {
+            // 이메일 형식을 내부 가상 도메인으로 매핑 치환하여 회원가입 우회 처리
+            const virtualEmail = `${id}@readingquiz.com`;
+            await createUserWithEmailAndPassword(auth, virtualEmail, pass);
+            openModalAlert("회원가입 성공", `'${id}' 선생님 계정이 성공적으로 생성되었습니다. 자동으로 연결합니다!`, "🎉");
+        } catch (error) {
+            let userMsg = error.message;
+            if (error.code === 'auth/email-already-in-use') userMsg = "이미 존재하는 선생님 ID입니다. 다른 ID를 선택해 주세요.";
+            openModalAlert("가입 실패", "새로운 교사 계정을 개설하지 못했습니다. 사유: " + userMsg, "❌");
+        }
+    };
+
+    // 💡 [기능 바인딩 완료] 간이 아이디 로그인 기능 액션 로직
+    document.getElementById('btn-login-admin').onclick = async () => {
+        const id = document.getElementById('admin-id-input').value.trim();
+        const pass = document.getElementById('admin-pass-input').value.trim();
+        
+        if (!id || !pass) {
+            openModalAlert("입력 확인", "아이디와 비밀번호를 모두 정확히 입력해 주십시오.");
+            return;
+        }
+
+        try {
+            const virtualEmail = `${id}@readingquiz.com`;
+            await signInWithEmailAndPassword(auth, virtualEmail, pass);
+        } catch (error) {
+            openModalAlert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다. 다시 확인해 주세요.", "🔒");
+        }
+    };
+
+    // 💡 [기능 바인딩 완료] 로그아웃 버튼 제어 액션 로직
+    document.getElementById('btn-logout-admin').onclick = async () => {
+        try {
+            await signOut(auth);
+            // 로그아웃 후 다시 익명 모드로 재로그인하여 학생 기본권 보장
+            await signInAnonymously(auth);
+            adminMainPanel.classList.add('hidden');
+            adminAuthPanel.classList.remove('hidden');
+            openModalAlert("로그아웃 완료", "교사 대시보드 세션이 안전하게 해제되었습니다.", "🔒");
+        } catch (error) {
+            openModalAlert("오류", "로그아웃 진행 도중 문제가 발생했습니다: " + error.message);
+        }
+    };
+
+    // 💡 [기능 바인딩 완료] 전용 배포 주소 클립보드 복사 액션 로직
+    document.getElementById('btn-copy-share-link').onclick = () => {
+        const copyInput = document.getElementById('admin-share-link');
+        copyInput.select();
+        document.execCommand('copy');
+        openModalAlert("배포 주소 복사 완료", "클립보드에 성공적으로 복사되었습니다.\n\n해당 링크를 복사하여 학생들의 SNS 창이나 공지방에 올려주시면 됩니다.", "✅");
+    };
+
+    // 교사용 통합 정보 대시보드 갱신
     async function refreshAdminDashboard() {
-        if (!isFirebaseActive || !user) {
+        if (!isFirebaseActive || !user || !loggedInTeacherId) {
             document.getElementById('admin-server-quiz-count').innerText = "로컬 모드";
             document.getElementById('admin-server-result-count').innerText = "조회 불가";
             return;
         }
 
         try {
-            const qSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'quizzes'));
+            // 💡 [선생님방 격리 분리] 내 고유 ID 디렉토리 하위의 통계값만 산출 로드
+            const qSnap = await getDocs(collection(db, 'artifacts', appId, 'teachers', loggedInTeacherId, 'quizzes'));
             document.getElementById('admin-server-quiz-count').innerText = `${qSnap.size}개`;
 
-            const rSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'results'));
+            const rSnap = await getDocs(collection(db, 'artifacts', appId, 'teachers', loggedInTeacherId, 'results'));
             document.getElementById('admin-server-result-count').innerText = `${rSnap.size}명`;
 
             const results = [];
@@ -1190,7 +1263,7 @@
             tableBody.innerHTML = '';
 
             if (results.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td></tr>`;
                 return;
             }
 
@@ -1202,11 +1275,17 @@
                     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
+                // 💡 [개별 기록 삭제 버튼 추가 완료] window 전역 메서드로 바인딩 처리 연계 구축
                 tr.innerHTML = `
                     <td class="px-4 py-3 font-semibold text-slate-900">${res.studentId}</td>
                     <td class="px-4 py-3 font-medium text-slate-700">${res.studentName}</td>
                     <td class="px-4 py-3 text-center"><span class="px-2 py-0.5 font-bold rounded-full text-[10px] ${res.score >= 1 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${res.score} / 3</span></td>
                     <td class="px-4 py-3 text-slate-400 text-[11px]">${timeStr}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-1 rounded-lg font-bold text-sm transition-colors" onclick="window.deleteSingleResult('${res.id}', '${res.studentId}', '${res.studentName}')">
+                            🗑️
+                        </button>
+                    </td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -1216,6 +1295,28 @@
             openModalAlert("통신 실패", "서버 대시보드 정보를 조회하지 못했습니다: " + error.message);
         }
     }
+
+    // 💡 [추가 완료] 개별 학생 성적 기록 하나씩 소멸시키는 글로벌 핸들러 함수 구현
+    window.deleteSingleResult = (docId, sId, sName) => {
+        if (!loggedInTeacherId) return;
+
+        openModalAlert(
+            "기록 개별 삭제 확인", 
+            `정말 [학번: ${sId} / 이름: ${sName}] 학생의 응시 기록을 데이터베이스에서 영구 삭제하시겠습니까?`, 
+            "❓", 
+            true, 
+            async () => {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'teachers', loggedInTeacherId, 'results', docId);
+                    await deleteDoc(docRef);
+                    openModalAlert("삭제 완료", "선택하신 학생의 기록이 완전히 소멸되었습니다.", "🗑️");
+                    await refreshAdminDashboard(); // 화면 새로고침 리로드
+                } catch (error) {
+                    openModalAlert("삭제 실패", "클라우드 권한 제어 오류로 삭제하지 못했습니다: " + error.message, "❌");
+                }
+            }
+        );
+    };
 
     const adminExcelInput = document.getElementById('admin-excel-file');
     adminExcelInput.addEventListener('change', (e) => {
@@ -1227,14 +1328,14 @@
     });
 
     async function uploadQuizzesToDatabase(quizzesList, filename) {
-        if (!isFirebaseActive || !user) {
-            openModalAlert("전송 실패", "현재 서버 연동 모드가 비활성화 상태입니다.");
+        if (!isFirebaseActive || !user || !loggedInTeacherId) {
+            openModalAlert("전송 실패", "현재 교사 세션이 올바르지 않습니다.");
             return;
         }
 
-        openModalAlert("퀴즈 데이터 교체 승인", `정말 [${filename}] 에 기록된 총 ${quizzesList.length}개의 퀴즈로 서버 질문을 전체 초기화 및 교체하시겠습니까?`, "❓", true, async () => {
+        openModalAlert("퀴즈 데이터 교체 승인", `정말 [${filename}] 에 기록된 총 ${quizzesList.length}개의 퀴즈로 내 문제 보관함을 전체 초기화 및 교체하시겠습니까?`, "❓", true, async () => {
             try {
-                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'quizzes');
+                const qRef = collection(db, 'artifacts', appId, 'teachers', loggedInTeacherId, 'quizzes');
                 const snap = await getDocs(qRef);
                 
                 const batch = writeBatch(db);
@@ -1247,7 +1348,7 @@
                     await addDoc(qRef, q);
                 }
 
-                openModalAlert("전송 완료", "성공적으로 모든 데이터베이스 퀴즈 질문지가 덮어쓰기 완료되었습니다. 이제 학생들은 파일 업로드 없이 즉시 응시할 수 있습니다.", "🎉");
+                openModalAlert("전송 완료", "성공적으로 데이터베이스 퀴즈 질문지가 덮어쓰기 완료되었습니다. 전용 주소를 학생들에게 안내해 주세요.", "🎉");
                 await refreshAdminDashboard();
                 await checkServerQuizStatus();
 
@@ -1258,11 +1359,11 @@
     }
 
     document.getElementById('btn-clear-results').onclick = () => {
-        if (!isFirebaseActive || !user) return;
+        if (!isFirebaseActive || !user || !loggedInTeacherId) return;
 
-        openModalAlert("데이터 영구 소멸", "정말 누적된 모든 학생 성적 결과를 일괄 삭제하시겠습니까? 이 조작은 절대 복구할 수 없습니다.", "🔥", true, async () => {
+        openModalAlert("데이터 전체 소멸", "정말 내 누적 모든 학생 성적 결과를 일괄 삭제하시겠습니까? 이 조작은 절대 복구할 수 없습니다.", "🔥", true, async () => {
             try {
-                const rRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
+                const rRef = collection(db, 'artifacts', appId, 'teachers', loggedInTeacherId, 'results');
                 const snap = await getDocs(rRef);
                 
                 const batch = writeBatch(db);
@@ -1271,7 +1372,7 @@
                 });
                 await batch.commit();
 
-                openModalAlert("완료", "모든 학생들의 응시 이력이 성공적으로 삭제되었습니다.", "🗑️");
+                openModalAlert("완료", "모든 학생들의 응시 이력이 성공적으로 소멸되었습니다.", "🗑️");
                 await refreshAdminDashboard();
 
             } catch (error) {
@@ -1281,10 +1382,10 @@
     };
 
     document.getElementById('btn-export-results').onclick = async () => {
-        if (!isFirebaseActive || !user) return;
+        if (!isFirebaseActive || !user || !loggedInTeacherId) return;
 
         try {
-            const rSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'results'));
+            const rSnap = await getDocs(collection(db, 'artifacts', appId, 'teachers', loggedInTeacherId, 'results'));
             if (rSnap.size === 0) {
                 openModalAlert("다운로드 실패", "엑셀로 출력할 결과 레코드가 존재하지 않습니다.");
                 return;
@@ -1307,7 +1408,7 @@
             const worksheet = XLSX.utils.aoa_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "학생독서퀴즈_성적대장");
-            XLSX.writeFile(workbook, "독서퀴즈_실시간_학생성적결과.xlsx");
+            XLSX.writeFile(workbook, `독서퀴즈_학생성적결과_${loggedInTeacherId}.xlsx`);
 
         } catch (error) {
             openModalAlert("오류", "엑셀 파일을 생성하는 도중 실패했습니다: " + error.message);
