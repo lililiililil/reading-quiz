@@ -372,16 +372,30 @@
                 </div>
             </div>
 
+            <!-- 💡 [디자인 리팩토링 및 검증 전용 버튼 신설] 2단계 업로드 레이아웃 설계 -->
             <div class="bg-slate-50 rounded-2xl p-5 border border-slate-150">
                 <h3 class="text-sm font-extrabold text-slate-800 mb-2 flex items-center gap-1.5">☁ 엑셀 퀴즈 업로드 & 교체</h3>
-                <p class="text-[11px] text-slate-400 leading-relaxed mb-4">새로운 퀴즈 데이터셋 엑셀 파일을 업로드해 데이터베이스에 저장합니다.</p>
+                <p class="text-[11px] text-slate-400 leading-relaxed mb-4">새로운 퀴즈 엑셀 파일을 업로드해 가져온 뒤, 하단의 [서버로 퀴즈 전송] 버튼을 눌러 데이터베이스에 반영합니다.</p>
                 
-                <div class="flex items-center gap-3">
-                    <label for="admin-excel-file" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-all">엑셀 파일 선택</label>
-                    <input type="file" id="admin-excel-file" accept=".xlsx, .xls" class="hidden">
-                    <div class="flex items-center gap-1 bg-white border border-slate-200 px-3 py-2 rounded-lg">
-                        <span class="text-xs text-slate-600 font-medium" id="admin-selected-filename">선택된 파일 없음</span>
-                        <button id="btn-clear-admin-file" class="text-slate-400 hover:text-rose-500 font-bold text-xs ml-1.5 hidden">×</button>
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3">
+                        <label for="admin-excel-file" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-all">엑셀 파일 선택</label>
+                        <input type="file" id="admin-excel-file" accept=".xlsx, .xls" class="hidden">
+                        <div class="flex items-center gap-1 bg-white border border-slate-200 px-3 py-2 rounded-lg">
+                            <span class="text-xs text-slate-600 font-medium" id="admin-selected-filename">선택된 파일 없음</span>
+                            <button id="btn-clear-admin-file" class="text-slate-400 hover:text-rose-500 font-bold text-xs ml-1.5 hidden">×</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 파일 정상 파싱 성공 시 노출되는 실시간 미리보기 피드백 및 최종 업로드 전송 컨트롤러 -->
+                    <div id="admin-upload-preview-box" class="hidden bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                        <div>
+                            <span class="text-xs font-extrabold text-indigo-900 block" id="admin-upload-preview-text">📄 파일 분석 중...</span>
+                            <p class="text-[10px] text-indigo-600/70 mt-0.5">이 단계에서는 서버에 등록되지 않습니다. 전송 버튼을 꼭 클릭해 주세요.</p>
+                        </div>
+                        <button id="btn-submit-quizzes-to-server" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm w-full md:w-auto flex-shrink-0">
+                            🚀 서버로 퀴즈 전송하기
+                        </button>
                     </div>
                 </div>
             </div>
@@ -448,7 +462,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // 💡 [수정 사항] 로그인 및 회원가입에 필수적인 핵심 파이어베이스 인증 모듈을 정확히 import 선언했습니다!
+    // 로그인 및 회원가입에 필수적인 핵심 파이어베이스 인증 모듈 선언
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -485,7 +499,11 @@
     let studentName = "";
     let quizDetailsHistory = []; 
 
-    // DOM 참조 전역 변수 바인딩 수리
+    // 💡 [임시 메모리 버퍼 기획] 파싱된 퀴즈 정보 홀더 변수 선언
+    let parsedAdminQuizzes = [];
+    let parsedAdminFilename = "";
+
+    // DOM 참조 전역 변수 바인딩
     const adminModal = document.getElementById('admin-modal');
     const adminCard = document.getElementById('admin-card');
     const adminAuthPanel = document.getElementById('admin-auth-panel');
@@ -590,7 +608,7 @@
         }
     }
 
-    // 💡 [출제 문항 수 조절] 설정 저장 연동 (Rule 1 준수)
+    // [출제 문항 수 조절] 설정 저장 연동 (Rule 1 준수)
     document.getElementById('btn-save-quiz-config').onclick = async () => {
         if (!isFirebaseActive || !loggedInTeacherId || !user) return;
         const selectedValue = parseInt(document.getElementById('admin-quiz-count-select').value);
@@ -631,7 +649,7 @@
         }
     }
 
-    // 💡 [UI 흐름 수리] 로컬/서버 모드에 따라 알맞은 학생 진입상자를 화면에 정상 분기 출력합니다.
+    // [UI 흐름 수리] 로컬/서버 모드에 따라 알맞은 학생 진입상자를 화면에 정상 분기 출력합니다.
     function updateIntroView() {
         const studentEntryBox = document.getElementById('student-entry-box');
         const excelDropBox = document.getElementById('excel-drop-box');
@@ -706,11 +724,11 @@
         }
     });
 
-    // 💡 [중복 업로드 버그 해결] 파일 선택 인풋 클릭 시 밸류를 비워주어 같은 파일 재선택 가능하게 리셋 처리
+    // [중복 업로드 버그 해결] 파일 선택 인풋 클릭 시 밸류를 비워주어 같은 파일 재선택 가능하게 리셋 처리
     fileInput.onclick = function() { this.value = ''; };
     document.getElementById('admin-excel-file').onclick = function() { this.value = ''; };
 
-    // 💡 [파일 취소 ❌] 로컬 엑셀 파싱 취소 및 드롭존 환원
+    // [파일 취소 ❌] 로컬 엑셀 파싱 취소 및 드롭존 환원
     document.getElementById('btn-cancel-local-excel').onclick = () => {
         allQuizzes = [];
         document.getElementById('local-ready-info').classList.add('hidden');
@@ -719,7 +737,7 @@
         updateIntroView();
     };
 
-    // 💡 [듀얼 파서] 구글 폼 원본(병합) 양식과 표준 10열 양식 자동 교차 분석
+    // [듀얼 파서] 구글 폼 원본(병합) 양식과 표준 10열 양식 자동 교차 분석
     function handleFileSelect(file, isAdminUpload = false) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -751,7 +769,14 @@
                 }
 
                 if (isAdminUpload) {
-                    uploadQuizzesToDatabase(parsedQuizzes, file.name);
+                    // 💡 [2단계 업로드 연동] 파싱 후 즉시 DB 업로드하지 않고, 임시 보관한 뒤 전송 버튼과 알림 상자를 출력합니다.
+                    parsedAdminQuizzes = parsedQuizzes;
+                    parsedAdminFilename = file.name;
+                    
+                    const previewBox = document.getElementById('admin-upload-preview-box');
+                    const previewText = document.getElementById('admin-upload-preview-text');
+                    previewText.innerText = `📄 '${file.name}' 분석 성공! 총 ${parsedQuizzes.length}개의 문제가 조립되었습니다.`;
+                    previewBox.classList.remove('hidden');
                 } else {
                     allQuizzes = parsedQuizzes;
                     if (allQuizzes.length < globalLimitQuizCount) {
@@ -886,7 +911,105 @@
         return quizzes;
     }
 
-    // 💡 [서버 전용 퀴즈 룸] 시작 버튼 핸들러
+    // 💡 [지능형 추출 가동] 텍스트 내의 ①, ②, ③, ④ 혹은 1., 2. 패턴을 분석하여 4지선다 옵션으로 분할 가공
+    function extractQuizData(rawQ, rawAns, rawInfo, bookTitle, pages) {
+        if (!rawQ || !rawAns) return null;
+
+        const qText = rawQ.toString().trim();
+        const ansText = rawAns.toString().trim();
+        const infoText = rawInfo ? rawInfo.toString().trim() : "해설이 제공되지 않는 문항입니다.";
+
+        let type = "단답형";
+        let correct = ansText;
+        let options = ["", "", "", ""];
+
+        const oxPattern = /\[\s*ox\s*퀴즈\s*\]/i;
+        const hasOXPatt = oxPattern.test(qText);
+        const ansClean = ansText.toUpperCase().replace(/\s+/g, "");
+        const isOXAns = ansClean === "O" || ansClean === "X" || ansClean === "참" || ansClean === "거짓";
+
+        if (hasOXPatt || isOXAns) {
+            type = "OX";
+            correct = (ansClean === "O" || ansClean === "참" || ansClean === "1" || ansClean === "T") ? "O" : "X";
+        } else {
+            const optPatternA = /(?:①|1\.)\s*(.*?)\s*(?:②|2\.)\s*(.*?)\s*(?:③|3\.)\s*(.*?)\s*(?:④|4\.)\s*(.*)/s;
+            const match = qText.match(optPatternA);
+            
+            if (match) {
+                type = "객관식";
+                options = [
+                    match[1].trim(),
+                    match[2].trim(),
+                    match[3].trim(),
+                    match[4].trim()
+                ];
+                
+                const idxOpt = qText.search(/(?:①|1\.)/);
+                let cleanQuestion = qText;
+                if (idxOpt !== -1) {
+                    cleanQuestion = qText.substring(0, idxOpt).trim();
+                }
+
+                let ansNum = 1;
+                const cleanAns = ansText.replace(/\s+/g, "");
+                if (cleanAns.includes("①") || cleanAns.includes("1")) ansNum = 1;
+                else if (cleanAns.includes("②") || cleanAns.includes("2")) ansNum = 2;
+                else if (cleanAns.includes("③") || cleanAns.includes("3")) ansNum = 3;
+                else if (cleanAns.includes("④") || cleanAns.includes("4")) ansNum = 4;
+                
+                correct = ansNum;
+
+                return {
+                    book: bookTitle,
+                    range: pages,
+                    type: type,
+                    q: cleanQuestion,
+                    option1: options[0],
+                    option2: options[1],
+                    option3: options[2],
+                    option4: options[3],
+                    correct: correct,
+                    info: infoText
+                };
+            }
+        }
+
+        if (type === "단답형") {
+            correct = ansText.split(",").map(a => a.trim()).filter(a => a.length > 0);
+        }
+
+        return {
+            book: bookTitle,
+            range: pages,
+            type: type,
+            q: qText,
+            option1: "",
+            option2: "",
+            option3: "",
+            option4: "",
+            correct: correct,
+            info: infoText
+        };
+    }
+
+    function sanitizeCorrectAnswer(val, type) {
+        if (val === undefined || val === null) return type === "OX" ? "O" : (type === "객관식" ? 1 : [""]);
+        let cleaned = val.toString().trim();
+        if (type === "OX") {
+            let uc = cleaned.toUpperCase().replace(/\s+/g, '');
+            if (uc.includes("O") || uc.includes("참") || uc.includes("T") || uc === "1" || uc === "YES") return "O";
+            if (uc.includes("X") || uc.includes("거짓") || uc.includes("F") || uc === "2" || uc === "NO") return "X";
+            return "O";
+        }
+        if (type === "객관식") {
+            let uc = cleaned.replace(/\s+/g, '');
+            if (uc.includes("①") || uc.includes("1")) return 1; if (uc.includes("②") || uc.includes("2")) return 2; if (uc.includes("③") || uc.includes("3")) return 3; if (uc.includes("④") || uc.includes("4")) return 4;
+            return 1;
+        }
+        if (type === "단답형") { return cleaned.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0); }
+        return cleaned;
+    }
+
     document.getElementById('btn-start-quiz').onclick = async () => {
         const idInput = document.getElementById('student-id');
         const nameInput = document.getElementById('student-name');
@@ -948,7 +1071,6 @@
         }
     };
 
-    // 💡 [로컬 실행 모드] 시작 버튼 핸들러
     document.getElementById('btn-start-local-quiz').onclick = () => {
         const idInput = document.getElementById('local-student-id');
         const nameInput = document.getElementById('local-student-name');
@@ -1172,17 +1294,33 @@
         }
     });
 
-    // 💡 [요청 기능 2-C] 교사 화면 업로드 파일 삭제 처리용 X 버튼 액션 리스너
-    document.getElementById('btn-clear-admin-file').onclick = () => {
+    // 💡 [클리어 함수 구조화 및 오버라이드] 파일 삭제 처리용 X 버튼 액션 리스너 수리
+    const clearAdminFileState = () => {
         adminExcelInput.value = '';
         document.getElementById('admin-selected-filename').innerText = '선택된 파일 없음';
         document.getElementById('btn-clear-admin-file').classList.add('hidden');
+        document.getElementById('admin-upload-preview-box').classList.add('hidden');
+        parsedAdminQuizzes = [];
+        parsedAdminFilename = "";
+    };
+    document.getElementById('btn-clear-admin-file').onclick = clearAdminFileState;
+
+    // 💡 [요청 기능 2-D] 임시 분석된 퀴즈 메모리를 최종 검증하여 실시간 데이터베이스(Firestore)로 전송 및 동기화 처리
+    document.getElementById('btn-submit-quizzes-to-server').onclick = async () => {
+        if (!isFirebaseActive || !user || !loggedInTeacherId) {
+            openModalAlert("인증 만료", "선생님 세션이 만료되었습니다. 다시 로그인해 주세요.");
+            return;
+        }
+        if (parsedAdminQuizzes.length === 0) {
+            openModalAlert("입력 확인", "먼저 퀴즈를 가져올 엑셀 파일을 선택해 주십시오.");
+            return;
+        }
+        await uploadQuizzesToDatabase(parsedAdminQuizzes, parsedAdminFilename);
     };
 
     // [Rule 1 & Rule 2 준수] 보안 규정에 맞는 퀴즈 일괄 초기화 업로드 (WriteBatch 적용)
     async function uploadQuizzesToDatabase(quizzesList, filename) {
-        if (!isFirebaseActive || !user || !loggedInTeacherId) { openModalAlert("전송 실패", "현재 교사 세션이 올바르지 않습니다."); return; }
-        openModalAlert("퀴즈 데이터 교체 승인", `정말 [${filename}] 에 기록된 총 ${quizzesList.length}개의 퀴즈로 내 문제 보관함을 전체 초기화 및 교체하시겠습니까?`, "❓", true, async () => {
+        openModalAlert("퀴즈 데이터 교체 승인", `정말 [${filename}]에 기록된 총 ${quizzesList.length}개의 퀴즈로 내 문제 보관함을 전체 초기화 및 교체하시겠습니까?`, "❓", true, async () => {
             try {
                 const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'quizzes');
                 const snap = await getDocs(qRef);
@@ -1219,6 +1357,10 @@
                 }
 
                 openModalAlert("전송 완료", "성공적으로 모든 독서 퀴즈 질문지가 업데이트되었습니다. 전용 주소를 학생들에게 안내해 주세요.", "🎉");
+                
+                // 전송 성공 시 임시 버퍼들 상태 클리어 처리
+                clearAdminFileState();
+                
                 await refreshAdminDashboard();
                 await checkServerQuizStatus();
             } catch (error) { 
@@ -1274,7 +1416,7 @@
                 const timeStr = new Date(res.timestamp).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const totalTargetRound = res.totalRounds || 3;
 
-                // 💡 [요청 기능 3-C] 정답수 란에 클릭 이벤트를 추가하여 오답노트 모달 팝업 가동
+                // [요청 기능 3-C] 정답수 란에 클릭 이벤트를 추가하여 오답노트 모달 팝업 가동
                 tr.innerHTML = `
                     <td class="px-4 py-3 font-semibold text-slate-900">${res.studentId}</td>
                     <td class="px-4 py-3 font-medium text-slate-700">${res.studentName}</td>
@@ -1293,7 +1435,7 @@
         } catch (error) { console.error("대시보드 리로드 실패:", error); }
     }
 
-    // 💡 [요청 기능 3-D] 성적 보드에서 임의 학생 버튼을 누르면 어떤 문제집을 마킹했는지 실시간 데이터 전개 모달 팝업 구현
+    // [요청 기능 3-D] 성적 보드에서 임의 학생 버튼을 누르면 어떤 문제집을 마킹했는지 실시간 데이터 전개 모달 팝업 구현
     window.triggerStudentDetailPopup = (docId) => {
         const studentRecord = cachedStudentsResultsMap[docId];
         if (!studentRecord) return;
@@ -1335,7 +1477,7 @@
         document.getElementById('student-detail-modal').classList.add('hidden');
     };
 
-    // 💡 [요청 기능 3-E] 성적 보드 다운로드 처리 시 우측 행 컬럼에 출제 질문과 마킹 정보 동적 확장 기입
+    // [요청 기능 3-E] 성적 보드 다운로드 처리 시 우측 행 컬럼에 출제 질문과 마킹 정보 동적 확장 기입
     document.getElementById('btn-export-results').onclick = async () => {
         if (!isFirebaseActive || !user || !loggedInTeacherId) return;
 
@@ -1437,7 +1579,7 @@
         });
     };
 
-    // 💡 회원가입 패널 연동 바인딩
+    // 회원가입 패널 연동 바인딩
     document.getElementById('btn-signup-admin').onclick = async () => {
         const id = document.getElementById('admin-id-input').value.trim();
         const pass = document.getElementById('admin-pass-input').value.trim();
