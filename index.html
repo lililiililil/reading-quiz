@@ -481,13 +481,37 @@
     let studentName = "";
     let quizDetailsHistory = []; // 현재 라운드 진행 중 정오답 스냅샷을 담아낼 히스토리 구조체
 
+    // 💡 [버그 완벽 수정] 누락되어 자바스크립트가 다운되던 교사 제어 관련 DOM 선언 복원 및 강제 매핑 완료!
+    const adminModal = document.getElementById('admin-modal');
+    const adminCard = document.getElementById('admin-card');
+    const adminAuthPanel = document.getElementById('admin-auth-panel');
+    const adminMainPanel = document.getElementById('admin-main-panel');
+    const adminIdInput = document.getElementById('admin-id-input');
+    const adminPassInput = document.getElementById('admin-pass-input');
+    const btnLogoutAdmin = document.getElementById('btn-logout-admin');
+    const btnLoginAdmin = document.getElementById('btn-login-admin');
+    const btnSignupAdmin = document.getElementById('btn-signup-admin');
+    const adminShareLink = document.getElementById('admin-share-link');
+    const btnCopyShareLink = document.getElementById('btn-copy-share-link');
+    const adminQuizCountSelect = document.getElementById('admin-quiz-count-select');
+    const btnSaveQuizConfig = document.getElementById('btn-save-quiz-config');
+    const adminServerQuizCount = document.getElementById('admin-server-quiz-count');
+    const adminServerResultCount = document.getElementById('admin-server-result-count');
+    const adminExcelFile = document.getElementById('admin-excel-file');
+    const adminSelectedFilename = document.getElementById('admin-selected-filename');
+    const btnClearAdminFile = document.getElementById('btn-clear-admin-file');
+    const adminResultsTable = document.getElementById('admin-results-table');
+    const btnExportResults = document.getElementById('btn-export-results');
+    const btnClearResults = document.getElementById('btn-clear-results');
+    const closeAdminBtn = document.getElementById('close-admin-btn');
+    const goAdminBtn = document.getElementById('go-admin-btn');
+
     window.onload = async function() {
         const urlParams = new URLSearchParams(window.location.search);
         currentTeacherId = urlParams.get('id') ? urlParams.get('id').trim() : "";
         await initFirebaseConnection();
     };
 
-    // Firebase 통신 활성화 및 오토 로그인
     async function initFirebaseConnection() {
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
@@ -517,25 +541,29 @@
                         loggedInTeacherId = u.email.split('@')[0];
                         isFirebaseActive = true;
                         
-                        document.getElementById('btn-logout-admin').classList.remove('hidden');
+                        btnLogoutAdmin.classList.remove('hidden');
                         document.getElementById('admin-header-subtitle').innerText = `[${loggedInTeacherId} 선생님] 계정으로 연결됨`;
-                        document.getElementById('admin-auth-panel').classList.add('hidden');
-                        document.getElementById('admin-main-panel').classList.remove('hidden');
+                        adminAuthPanel.classList.add('hidden');
+                        adminMainPanel.classList.remove('hidden');
 
                         const shareUrl = `${window.location.origin}${window.location.pathname}?id=${loggedInTeacherId}`;
-                        document.getElementById('admin-share-link').value = shareUrl;
+                        adminShareLink.value = shareUrl;
 
-                        // [Rule 1 준수] 허용된 격리 보안 경로인 public/data/settings 하위에서 config 파일 로딩
-                        const configDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', loggedInTeacherId));
-                        if (configDoc.exists()) {
-                            globalLimitQuizCount = parseInt(configDoc.data().quizCount) || 3;
-                            document.getElementById('admin-quiz-count-select').value = globalLimitQuizCount;
+                        // [Rule 1 준수 및 예외 방지] 설정 파일 조회 시 존재하지 않거나 권한이 밀리더라도 다운되지 않게 try-catch 보완
+                        try {
+                            const configDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', loggedInTeacherId));
+                            if (configDoc.exists()) {
+                                globalLimitQuizCount = parseInt(configDoc.data().quizCount) || 3;
+                                adminQuizCountSelect.value = globalLimitQuizCount;
+                            }
+                        } catch (e) {
+                            console.warn("세팅값 조회 생략 (기본 3문항 유지):", e);
                         }
 
                         await refreshAdminDashboard();
                     } else {
                         loggedInTeacherId = "";
-                        document.getElementById('btn-logout-admin').classList.add('hidden');
+                        btnLogoutAdmin.classList.add('hidden');
                         document.getElementById('admin-header-subtitle').innerText = "실시간 DB 데이터 확인 및 퀴즈 구성을 설계합니다.";
 
                         if (currentTeacherId) {
@@ -545,11 +573,15 @@
                             connectionStatus.classList.add('bg-emerald-50', 'text-emerald-700');
                             connectionStatus.classList.remove('bg-slate-100', 'text-slate-500');
                             
-                            // [Rule 1 준수] 학생 진입 시 해당 꼬리표 방 주소 주인의 문항 수 설정 파일 로드
-                            const configDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', currentTeacherId));
-                            if (configDoc.exists()) {
-                                globalLimitQuizCount = parseInt(configDoc.data().quizCount) || 3;
-                            } else {
+                            // [Rule 1 준수] 학생 진입 시 꼬리표 정보 로드 시 에러 방지
+                            try {
+                                const configDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', currentTeacherId));
+                                if (configDoc.exists()) {
+                                    globalLimitQuizCount = parseInt(configDoc.data().quizCount) || 3;
+                                } else {
+                                    globalLimitQuizCount = 3;
+                                }
+                            } catch (e) {
                                 globalLimitQuizCount = 3;
                             }
                             
@@ -574,9 +606,9 @@
     }
 
     // 💡 [요청 기능 1] 교사용 문항 개수 수동 선택 저장 연동 (Rule 1 보안 가이드 준수)
-    document.getElementById('btn-save-quiz-config').onclick = async () => {
+    btnSaveQuizConfig.onclick = async () => {
         if (!isFirebaseActive || !loggedInTeacherId) return;
-        const selectedValue = parseInt(document.getElementById('admin-quiz-count-select').value);
+        const selectedValue = parseInt(adminQuizCountSelect.value);
         
         try {
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', loggedInTeacherId), {
@@ -658,7 +690,7 @@
 
     // 💡 [요청 기능 2-A] 똑같은 이름의 파일을 연속 선택해도 언제나 정상 업로드
     fileInput.onclick = function() { this.value = ''; };
-    document.getElementById('admin-excel-file').onclick = function() { this.value = ''; };
+    adminExcelFile.onclick = function() { this.value = ''; };
 
     // 💡 [요청 기능 2-B] 학생 로컬 모드 파일 취소 버튼 연동
     document.getElementById('btn-cancel-local-excel').onclick = () => {
@@ -791,25 +823,6 @@
         if (type === "단답형") { return cleaned.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0); }
         return cleaned;
     }
-
-    document.getElementById('download-sample-btn').onclick = (e) => {
-        e.preventDefault();
-        const data = [
-            ["책제목", "문제유형", "출제범위", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"],
-            ["어린 왕자", "객관식", "1장 ~ 3장", "어린 왕자의 고향 행성 이름은 무엇일까요?", "B612", "A101", "지구", "화성", "1", "어린 왕자는 소행성 B612에서 왔습니다."],
-            ["데미안", "OX", "p.45 ~ p.80", "싱클레어가 알에서 깨어나기 위해 만난 주인공의 정신적 멘토는 크로머이다.", "O", "X", "", "", "X", "싱클레어의 멘토는 크로머가 아니라 데미안입니다."],
-            ["1984", "단답형", "제 1부 전체", "작품 속에서 당과 사회를 철저히 감시하는 독재적 감시 시스템 및 가상의 지배자 이름은?", "", "", "", "", "빅 브라더, 빅브라더", "빅 브라더(Big Brother)는 사회를 철저히 지배하고 감시하는 독재자입니다."],
-            ["변신", "OX", "프롤로그", "주인공 그레고르 잠자는 어느 날 아침 침대에서 깨어났을 때 흉측한 갑충으로 변해 있었다.", "O", "X", "", "", "O", "그레고르 잠자는 거대한 벌레로 일순간 변했습니다."]
-        ];
-        try {
-            const worksheet = XLSX.utils.aoa_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "독서퀴즈_샘플양식");
-            XLSX.writeFile(workbook, "독서퀴즈_지능형_샘플양식.xlsx");
-        } catch (error) {
-            openModalAlert("오류", "샘플 다운로드 도중 에러가 발생했습니다: " + error.message);
-        }
-    };
 
     document.getElementById('btn-start-quiz').onclick = async () => {
         const idInput = document.getElementById('student-id');
@@ -1086,21 +1099,11 @@
         document.body.removeChild(textarea);
     };
 
-    const adminExcelInput = document.getElementById('admin-excel-file');
-    adminExcelInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            document.getElementById('admin-selected-filename').innerText = file.name;
-            document.getElementById('btn-clear-admin-file').classList.remove('hidden'); // X버튼 노출
-            handleFileSelect(file, true);
-        }
-    });
-
     // 💡 [요청 기능 2-C] 교사 화면 업로드 파일 삭제 처리용 X 버튼 액션 리스너
-    document.getElementById('btn-clear-admin-file').onclick = () => {
-        adminExcelInput.value = '';
-        document.getElementById('admin-selected-filename').innerText = '선택된 파일 없음';
-        document.getElementById('btn-clear-admin-file').classList.add('hidden');
+    btnClearAdminFile.onclick = () => {
+        adminExcelFile.value = '';
+        adminSelectedFilename.innerText = '선택된 파일 없음';
+        btnClearAdminFile.classList.add('hidden');
     };
 
     // [Rule 1 & Rule 2 준수] 보안 규정에 맞는 퀴즈 일괄 초기화 업로드
@@ -1131,13 +1134,11 @@
         });
     }
 
-    let cachedStudentsResultsMap = {};
-
     // [Rule 1 & Rule 2 준수] 교사 대시보드 성적 리스트 메모리 필터 로딩
     async function refreshAdminDashboard() {
         if (!isFirebaseActive || !user || !loggedInTeacherId) {
-            document.getElementById('admin-server-quiz-count').innerText = "로컬 모드";
-            document.getElementById('admin-server-result-count').innerText = "조회 불가";
+            adminServerQuizCount.innerText = "로컬 모드";
+            adminServerResultCount.innerText = "조회 불가";
             return;
         }
 
@@ -1147,7 +1148,7 @@
             qSnap.forEach(doc => {
                 if (doc.data().teacherId === loggedInTeacherId) quizSize++;
             });
-            document.getElementById('admin-server-quiz-count').innerText = `${quizSize}개`;
+            adminServerQuizCount.innerText = `${quizSize}개`;
 
             const rSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'results'));
             const results = [];
@@ -1160,15 +1161,14 @@
                     cachedStudentsResultsMap[doc.id] = record; // 스냅샷 백업 캐싱
                 }
             });
-            document.getElementById('admin-server-result-count').innerText = `${results.length}명`;
+            adminServerResultCount.innerText = `${results.length}명`;
 
             results.sort((a, b) => { return new Date(b.timestamp) - new Date(a.timestamp); });
 
-            const tableBody = document.getElementById('admin-results-table');
-            tableBody.innerHTML = '';
+            adminResultsTable.innerHTML = '';
 
             if (results.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td></tr>`;
+                adminResultsTable.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td></tr>`;
                 return;
             }
 
@@ -1191,7 +1191,7 @@
                         <button class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-1 rounded-lg font-bold text-sm transition-colors" onclick="window.deleteSingleResult('${res.id}', '${res.studentId}', '${res.studentName}')">🗑️</button>
                     </td>
                 `;
-                tableBody.appendChild(tr);
+                adminResultsTable.appendChild(tr);
             });
         } catch (error) { console.error("대시보드 리로드 실패:", error); }
     }
@@ -1239,7 +1239,7 @@
     };
 
     // 💡 [요청 기능 3-E] 성적 보드 다운로드 처리 시 우측 행 컬럼에 출제 질문과 마킹 정보 동적 확장 기입
-    document.getElementById('btn-export-results').onclick = async () => {
+    btnExportResults.onclick = async () => {
         if (!isFirebaseActive || !user || !loggedInTeacherId) return;
 
         try {
@@ -1298,16 +1298,58 @@
     };
 
     // 기존 소스코드 시스템 기능 바인딩 원형 보존 단락
-    document.getElementById('go-admin-btn').onclick = () => {
+    goAdminBtn.onclick = () => {
         adminModal.classList.remove('hidden'); setTimeout(() => adminCard.classList.remove('scale-95'), 10);
         if (!loggedInTeacherId) {
             adminAuthPanel.classList.remove('hidden'); adminMainPanel.classList.add('hidden');
-            document.getElementById('admin-id-input').value = ''; document.getElementById('admin-pass-input').value = ''; document.getElementById('admin-id-input').focus();
+            adminIdInput.value = ''; adminPassInput.value = ''; adminIdInput.focus();
         }
     };
-    document.getElementById('close-admin-btn').onclick = () => { adminCard.classList.add('scale-95'); setTimeout(() => adminModal.classList.add('hidden'), 200); };
-    document.getElementById('btn-logout-admin').onclick = async () => { try { await signOut(auth); await signInAnonymously(auth); adminMainPanel.classList.add('hidden'); adminAuthPanel.classList.remove('hidden'); openModalAlert("로그아웃 완료", "선생님 퀴즈방 세션이 안전하게 해제되었습니다.", "🔒"); } catch (error) { } };
-    document.getElementById('btn-copy-share-link').onclick = () => { const copyInput = document.getElementById('admin-share-link'); copyInput.select(); document.execCommand('copy'); openModalAlert("배포 주소 복사 완료", "클립보드에 주소가 복사되었습니다.\n\n해당 주소를 공지방에 배포하세요.", "✅"); };
+
+    btnSignupAdmin.onclick = async () => {
+        const id = adminIdInput.value.trim();
+        const pass = adminPassInput.value.trim();
+        
+        if (!id || !pass) {
+            openModalAlert("입력 확인", "아이디와 비밀번호를 모두 입력해 주십시오.");
+            return;
+        }
+        if (pass.length < 6) {
+            openModalAlert("보안 경고", "비밀번호는 최소 6자리 이상이어야 보호 수준이 유지됩니다.");
+            return;
+        }
+
+        try {
+            const virtualEmail = `${id}@readingquiz.com`;
+            await createUserWithEmailAndPassword(auth, virtualEmail, pass);
+            openModalAlert("회원가입 성공", `'${id}' 선생님 계정이 성공적으로 생성되었습니다. 자동으로 연결합니다!`, "🎉");
+        } catch (error) {
+            let userMsg = error.message;
+            if (error.code === 'auth/email-already-in-use') userMsg = "이미 존재하는 선생님 ID입니다. 다른 ID를 선택해 주세요.";
+            openModalAlert("가입 실패", "새로운 교사 계정을 개설하지 못했습니다. 사유: " + userMsg, "❌");
+        }
+    };
+
+    btnLoginAdmin.onclick = async () => {
+        const id = adminIdInput.value.trim();
+        const pass = adminPassInput.value.trim();
+        
+        if (!id || !pass) {
+            openModalAlert("입력 확인", "아이디와 비밀번호를 모두 정확히 입력해 주십시오.");
+            return;
+        }
+
+        try {
+            const virtualEmail = `${id}@readingquiz.com`;
+            await signInWithEmailAndPassword(auth, virtualEmail, pass);
+        } catch (error) {
+            openModalAlert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다. 다시 확인해 주세요.", "🔒");
+        }
+    };
+
+    closeAdminBtn.onclick = () => { adminCard.classList.add('scale-95'); setTimeout(() => adminModal.classList.add('hidden'), 200); };
+    btnLogoutAdmin.onclick = async () => { try { await signOut(auth); await signInAnonymously(auth); adminMainPanel.classList.add('hidden'); adminAuthPanel.classList.remove('hidden'); openModalAlert("로그아웃 완료", "선생님 퀴즈방 세션이 안전하게 해제되었습니다.", "🔒"); } catch (error) { } };
+    btnCopyShareLink.onclick = () => { const copyInput = document.getElementById('admin-share-link'); copyInput.select(); document.execCommand('copy'); openModalAlert("배포 주소 복사 완료", "클립보드에 주소가 복사되었습니다.\n\n해당 주소를 공지방에 배포하세요.", "✅"); };
     
     window.deleteSingleResult = (docId, sId, sName) => {
         if (!loggedInTeacherId) return;
@@ -1321,7 +1363,7 @@
         });
     };
     
-    document.getElementById('btn-clear-results').onclick = () => {
+    btnClearResults.onclick = () => {
         if (!loggedInTeacherId) return;
         openModalAlert("데이터 전체 소멸", "정말 내 누적 모든 학생 성적 결과를 일괄 삭제하시겠습니까? 이 조작은 절대 복구할 수 없습니다.", "🔥", true, async () => {
             try { 
