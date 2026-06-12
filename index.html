@@ -448,11 +448,11 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // 💡 [오류 수정 완료] createUserWithEmailAndPassword, signInWithEmailAndPassword 함수를 빼먹지 않고 완벽히 추가 로드했습니다!
+    // 💡 [수정 사항] 로그인 및 회원가입에 필수적인 핵심 파이어베이스 인증 모듈을 정확히 import 선언했습니다!
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 1. 글로벌 환경 설정
+    // 1. 글로벌 환경 설정 및 파이어베이스 세팅
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-book-quiz';
     const fallbackConfig = {
         apiKey: "AIzaSyDpO7h9rUFpzPROfVnKzhjpbRqAtgu5fAw",
@@ -474,7 +474,7 @@
 
     let currentTeacherId = ""; 
     let loggedInTeacherId = ""; 
-    let globalLimitQuizCount = 3; // 기본 한 서버당 랜덤 추출 퀴즈 디폴트 세팅값 개수
+    let globalLimitQuizCount = 3; 
 
     let allQuizzes = [];
     let selectedQuizzes = [];
@@ -483,9 +483,9 @@
     let currentQuiz;
     let studentId = "";
     let studentName = "";
-    let quizDetailsHistory = []; // 현재 라운드 진행 중 정오답 스냅샷을 담아낼 히스토리 구조체
+    let quizDetailsHistory = []; 
 
-    // DOM 참조 전역 변수
+    // DOM 참조 전역 변수 바인딩 수리
     const adminModal = document.getElementById('admin-modal');
     const adminCard = document.getElementById('admin-card');
     const adminAuthPanel = document.getElementById('admin-auth-panel');
@@ -495,7 +495,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         currentTeacherId = urlParams.get('id') ? urlParams.get('id').trim() : "";
         
-        // Rule 3 선제 로그인 실행
+        // Rule 3: Auth Before Queries 선제 실행 보증
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
@@ -506,13 +506,13 @@
         try {
             await initAuth();
         } catch (e) {
-            console.error("Auth init failed: ", e);
+            console.error("인증 도구 활성화 대기 에러: ", e);
         }
 
         await initFirebaseConnection();
     };
 
-    // Firebase 통신 활성화 및 오토 로그인
+    // Firebase 연동 상태 모니터링 및 복원
     async function initFirebaseConnection() {
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
@@ -534,7 +534,7 @@
                         const shareUrl = `${window.location.origin}${window.location.pathname}?id=${loggedInTeacherId}`;
                         document.getElementById('admin-share-link').value = shareUrl;
 
-                        // [Rule 1 준수] 허용된 격리 보안 경로인 public/data/settings 하위에서 config 파일 로딩
+                        // [Rule 1 준수] 허용된 격리 세팅인 public/data/settings 하위에서 config 파일 로딩
                         try {
                             const configDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', loggedInTeacherId));
                             if (configDoc.exists()) {
@@ -542,7 +542,7 @@
                                 document.getElementById('admin-quiz-count-select').value = globalLimitQuizCount;
                             }
                         } catch (err) {
-                            console.warn("Config load error, using default: ", err);
+                            console.warn("저장된 출제수 불러오기 실패, 기본값(3)으로 세팅: ", err);
                         }
 
                         await refreshAdminDashboard();
@@ -558,7 +558,7 @@
                             connectionStatus.classList.add('bg-emerald-50', 'text-emerald-700');
                             connectionStatus.classList.remove('bg-slate-100', 'text-slate-500');
                             
-                            // [Rule 1 준수] 학생 진입 시 해당 꼬리표 방 주소 주인의 문항 수 설정 파일 로드
+                            // [Rule 1 준수] 해당 꼬리표 교사의 퀴즈 문항수 설정 동기화
                             try {
                                 const configDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', currentTeacherId));
                                 if (configDoc.exists()) {
@@ -590,7 +590,7 @@
         }
     }
 
-    // 💡 [요청 기능 1] 교사용 문항 개수 수동 선택 저장 연동 (Rule 1 보안 가이드 준수)
+    // 💡 [출제 문항 수 조절] 설정 저장 연동 (Rule 1 준수)
     document.getElementById('btn-save-quiz-config').onclick = async () => {
         if (!isFirebaseActive || !loggedInTeacherId || !user) return;
         const selectedValue = parseInt(document.getElementById('admin-quiz-count-select').value);
@@ -601,13 +601,13 @@
                 updatedAt: new Date().toISOString()
             });
             globalLimitQuizCount = selectedValue;
-            openModalAlert("설정 변경 성공", `이제 학생들이 접속할 때 랜덤 추출 문제가 [ ${selectedValue}개 ] 로 자동 할당됩니다.`, "⚙️");
+            openModalAlert("설정 변경 성공", `이제 학생들이 접속할 때 랜덤 추출 문제가 [ ${selectedValue}개 ] 로 자동 변경됩니다.`, "⚙️");
         } catch (err) {
-            openModalAlert("저장 실패", "서버 세팅값을 오버라이드 도중 실패했습니다: " + err.message);
+            openModalAlert("저장 실패", "서버 세팅값을 덮어쓰는 도중 실패했습니다: " + err.message);
         }
     };
 
-    // [Rule 1 & Rule 2 준수] 메모리 필터링 방식으로 퀴즈 로드
+    // [Rule 1 & Rule 2 준수] 메모리 내부 필터링 방식으로 퀴즈 세팅 로드
     async function checkServerQuizStatus() {
         if (!isFirebaseActive || !currentTeacherId || !user) {
             updateIntroView();
@@ -625,32 +625,65 @@
             });
             updateIntroView();
         } catch (error) {
-            console.error("서버 퀴즈 적합성 분석 에러:", error);
+            console.error("서버 퀴즈 질문 분석 에러:", error);
             isFirebaseActive = false;
             updateIntroView();
         }
     }
 
+    // 💡 [UI 흐름 수리] 로컬/서버 모드에 따라 알맞은 학생 진입상자를 화면에 정상 분기 출력합니다.
     function updateIntroView() {
         const studentEntryBox = document.getElementById('student-entry-box');
         const excelDropBox = document.getElementById('excel-drop-box');
         const introSubtitle = document.getElementById('intro-subtitle');
         const serverQuizInfo = document.getElementById('server-quiz-info');
+        const localReadyInfo = document.getElementById('local-ready-info');
 
         if (isFirebaseActive && allQuizzes.length >= globalLimitQuizCount) {
+            // 서버 퀴즈 구동 가능한 모드
             excelDropBox.classList.add('hidden');
+            localReadyInfo.classList.add('hidden');
             studentEntryBox.classList.remove('hidden');
-            serverQuizInfo.innerText = `'${currentTeacherId}' 선생님 방에 총 ${allQuizzes.length}개의 문제가 대기 중이며, 이 중 [${globalLimitQuizCount}문제]가 랜덤 출제됩니다.`;
+            serverQuizInfo.innerText = `'${currentTeacherId}' 선생님 방에 총 ${allQuizzes.length}개의 문제가 준비되어 있으며, 이 중 [${globalLimitQuizCount}문제]가 랜덤 출제됩니다.`;
             introSubtitle.innerText = "학번과 이름을 입력하면 실시간 독서 활동 검증 퀴즈에 응시할 수 있습니다.";
         } else {
+            // 로컬 모드 혹은 서버 준비 미달
             studentEntryBox.classList.add('hidden');
-            excelDropBox.classList.remove('hidden');
-            if (currentTeacherId) {
-                introSubtitle.innerText = `⚠️ '${currentTeacherId}' 선생님 방의 문제 수(${allQuizzes.length}개)가 목표 출제 수(${globalLimitQuizCount}개)보다 부족합니다. 관리 도구에서 채워주세요.`;
+            if (allQuizzes.length > 0 && allQuizzes.length < globalLimitQuizCount) {
+                // 서버 문제는 있으나 문항수가 모자란 비상 모드
+                excelDropBox.classList.remove('hidden');
+                introSubtitle.innerText = `⚠️ '${currentTeacherId}' 선생님 방의 문제 수(${allQuizzes.length}개)가 설정 문항 수(${globalLimitQuizCount}개)보다 적어 퀴즈가 시작되지 않습니다.`;
+            } else if (currentTeacherId) {
+                excelDropBox.classList.remove('hidden');
+                introSubtitle.innerText = `⚠️ '${currentTeacherId}' 선생님의 퀴즈 저장소가 비어 있습니다. 관리 도구에서 엑셀 문제를 채워주세요.`;
             } else {
+                // 공통 메인화면 로컬 모드
+                if (allQuizzes.length > 0) {
+                    excelDropBox.classList.add('hidden');
+                    localReadyInfo.classList.remove('hidden');
+                } else {
+                    excelDropBox.classList.remove('hidden');
+                    localReadyInfo.classList.add('hidden');
+                }
                 introSubtitle.innerText = "엑셀 파일(.xlsx)을 아래에 업로드하시면 서버 연결 없이 즉시 퀴즈를 진행할 수 있습니다.";
             }
         }
+    }
+
+    function openModalAlert(title, message, emoji = "⚠️", isConfirm = false, onConfirmCallback = null) {
+        const modal = document.getElementById('custom-alert-modal');
+        const icon = document.getElementById('alert-icon');
+        const t = document.getElementById('alert-title');
+        const desc = document.getElementById('alert-desc');
+        const confirmBtn = document.getElementById('alert-confirm-btn');
+        const cancelBtn = document.getElementById('alert-cancel-btn');
+
+        icon.innerText = emoji; t.innerText = title; desc.innerText = message;
+        if (isConfirm) cancelBtn.classList.remove('hidden'); else cancelBtn.classList.add('hidden');
+        modal.classList.remove('hidden');
+
+        confirmBtn.onclick = () => { modal.classList.add('hidden'); if (onConfirmCallback) onConfirmCallback(); };
+        cancelBtn.onclick = () => { modal.classList.add('hidden'); };
     }
 
     const dropzone = document.getElementById('dropzone');
@@ -673,19 +706,20 @@
         }
     });
 
-    // 💡 [요청 기능 2-A] 똑같은 이름의 파일을 연속 선택해도 언제나 정상 업로드
+    // 💡 [중복 업로드 버그 해결] 파일 선택 인풋 클릭 시 밸류를 비워주어 같은 파일 재선택 가능하게 리셋 처리
     fileInput.onclick = function() { this.value = ''; };
     document.getElementById('admin-excel-file').onclick = function() { this.value = ''; };
 
-    // 💡 [요청 기능 2-B] 학생 로컬 모드 파일 취소 버튼 연동
+    // 💡 [파일 취소 ❌] 로컬 엑셀 파싱 취소 및 드롭존 환원
     document.getElementById('btn-cancel-local-excel').onclick = () => {
         allQuizzes = [];
         document.getElementById('local-ready-info').classList.add('hidden');
         dropzone.classList.remove('hidden');
         fileInput.value = '';
+        updateIntroView();
     };
 
-    // 💡 [듀얼 파서 기능 완벽 구축] 구글 폼 다중 설문(병합 행) 및 단정형 10열 엑셀 자동 변환 탑재
+    // 💡 [듀얼 파서] 구글 폼 원본(병합) 양식과 표준 10열 양식 자동 교차 분석
     function handleFileSelect(file, isAdminUpload = false) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -706,10 +740,8 @@
                 let parsedQuizzes = [];
 
                 if (headerText.includes("퀴즈1") || headerText.includes("[퀴즈1]") || headerText.includes("퀴즈2") || headerText.includes("퀴즈3")) {
-                    // 구글 폼 다중 파싱 모드 가동 (한 줄에 3개씩 들어있는 원본 학생 업로드 엑셀)
                     parsedQuizzes = parseGoogleFormSheet(sheetData);
                 } else {
-                    // 정형화된 단일 10열 평면 엑셀 파서 모드 가동
                     parsedQuizzes = parseFlatListSheet(sheetData);
                 }
 
@@ -728,6 +760,7 @@
                     document.getElementById('stat-total-count').innerText = `${allQuizzes.length}개`;
                     document.getElementById('local-ready-info').classList.remove('hidden');
                     dropzone.classList.add('hidden');
+                    updateIntroView();
                 }
 
             } catch (err) {
@@ -737,7 +770,7 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // A. 구글 폼 오리지널 다중 파싱 모듈
+    // A. 구글 폼 다중 파싱 모듈
     function parseGoogleFormSheet(sheetData) {
         const headers = sheetData[0];
         
@@ -770,7 +803,6 @@
             else if (hStr.includes("퀴즈3해설") || hStr.includes("[퀴즈3]해설") || (hStr.includes("퀴즈3") && hStr.includes("근거")) || (hStr.includes("퀴즈3") && hStr.includes("해설"))) q3_info = idx;
         });
 
-        // 자동 감지 실패 시 백업 인덱스 매핑 설정
         if (colBook === -1) colBook = 3;
         if (colVolume === -1) colVolume = 4;
         if (colPages === -1) colPages = 5;
@@ -854,105 +886,7 @@
         return quizzes;
     }
 
-    // 💡 [지능형 추출 가동] 텍스트 내의 ①, ②, ③, ④ 혹은 1., 2. 패턴을 분석하여 4지선다 옵션으로 분할 가공
-    function extractQuizData(rawQ, rawAns, rawInfo, bookTitle, pages) {
-        if (!rawQ || !rawAns) return null;
-
-        const qText = rawQ.toString().trim();
-        const ansText = rawAns.toString().trim();
-        const infoText = rawInfo ? rawInfo.toString().trim() : "해설이 제공되지 않는 문항입니다.";
-
-        let type = "단답형";
-        let correct = ansText;
-        let options = ["", "", "", ""];
-
-        const oxPattern = /\[\s*ox\s*퀴즈\s*\]/i;
-        const hasOXPatt = oxPattern.test(qText);
-        const ansClean = ansText.toUpperCase().replace(/\s+/g, "");
-        const isOXAns = ansClean === "O" || ansClean === "X" || ansClean === "참" || ansClean === "거짓";
-
-        if (hasOXPatt || isOXAns) {
-            type = "OX";
-            correct = (ansClean === "O" || ansClean === "참" || ansClean === "1" || ansClean === "T") ? "O" : "X";
-        } else {
-            const optPatternA = /(?:①|1\.)\s*(.*?)\s*(?:②|2\.)\s*(.*?)\s*(?:③|3\.)\s*(.*?)\s*(?:④|4\.)\s*(.*)/s;
-            const match = qText.match(optPatternA);
-            
-            if (match) {
-                type = "객관식";
-                options = [
-                    match[1].trim(),
-                    match[2].trim(),
-                    match[3].trim(),
-                    match[4].trim()
-                ];
-                
-                const idxOpt = qText.search(/(?:①|1\.)/);
-                let cleanQuestion = qText;
-                if (idxOpt !== -1) {
-                    cleanQuestion = qText.substring(0, idxOpt).trim();
-                }
-
-                let ansNum = 1;
-                const cleanAns = ansText.replace(/\s+/g, "");
-                if (cleanAns.includes("①") || cleanAns.includes("1")) ansNum = 1;
-                else if (cleanAns.includes("②") || cleanAns.includes("2")) ansNum = 2;
-                else if (cleanAns.includes("③") || cleanAns.includes("3")) ansNum = 3;
-                else if (cleanAns.includes("④") || cleanAns.includes("4")) ansNum = 4;
-                
-                correct = ansNum;
-
-                return {
-                    book: bookTitle,
-                    range: pages,
-                    type: type,
-                    q: cleanQuestion,
-                    option1: options[0],
-                    option2: options[1],
-                    option3: options[2],
-                    option4: options[3],
-                    correct: correct,
-                    info: infoText
-                };
-            }
-        }
-
-        if (type === "단답형") {
-            correct = ansText.split(",").map(a => a.trim()).filter(a => a.length > 0);
-        }
-
-        return {
-            book: bookTitle,
-            range: pages,
-            type: type,
-            q: qText,
-            option1: "",
-            option2: "",
-            option3: "",
-            option4: "",
-            correct: correct,
-            info: infoText
-        };
-    }
-
-    function sanitizeCorrectAnswer(val, type) {
-        if (val === undefined || val === null) return type === "OX" ? "O" : (type === "객관식" ? 1 : [""]);
-        let cleaned = val.toString().trim();
-        if (type === "OX") {
-            let uc = cleaned.toUpperCase().replace(/\s+/g, '');
-            if (uc.includes("O") || uc.includes("참") || uc.includes("T") || uc === "1" || uc === "YES") return "O";
-            if (uc.includes("X") || uc.includes("거짓") || uc.includes("F") || uc === "2" || uc === "NO") return "X";
-            return "O";
-        }
-        if (type === "객관식") {
-            let uc = cleaned.replace(/\s+/g, '');
-            if (uc.includes("①") || uc.includes("1")) return 1; if (uc.includes("②") || uc.includes("2")) return 2; if (uc.includes("③") || uc.includes("3")) return 3; if (uc.includes("④") || uc.includes("4")) return 4;
-            return 1;
-        }
-        if (type === "단답형") { return cleaned.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0); }
-        return cleaned;
-    }
-
+    // 💡 [서버 전용 퀴즈 룸] 시작 버튼 핸들러
     document.getElementById('btn-start-quiz').onclick = async () => {
         const idInput = document.getElementById('student-id');
         const nameInput = document.getElementById('student-name');
@@ -974,7 +908,7 @@
         
         try {
             if (isFirebaseActive && user && db && currentTeacherId) {
-                // [Rule 1 준수] 결과 검증 경로 수정
+                // [Rule 1 준수] 결과 격리 및 수신 경로 보증
                 const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
                 const snap = await getDocs(resultsRef);
                 
@@ -1010,10 +944,11 @@
         } catch (error) {
             btn.innerText = originalBtnText;
             btn.disabled = false;
-            openModalAlert("퀴즈 시작 오류", "문제를 불러오거나 중복 응시 여부를 검증하는 도중 에러가 발생했습니다. 에러 내용: " + error.message, "❌");
+            openModalAlert("퀴즈 시작 오류", "중복 응시 여부를 대조하는 과정에서 통신 에러가 발생했습니다. 에러 내용: " + error.message, "❌");
         }
     };
 
+    // 💡 [로컬 실행 모드] 시작 버튼 핸들러
     document.getElementById('btn-start-local-quiz').onclick = () => {
         const idInput = document.getElementById('local-student-id');
         const nameInput = document.getElementById('local-student-name');
@@ -1022,7 +957,7 @@
         studentName = nameInput.value.trim();
 
         if (!studentId || !studentName) {
-            openModalAlert("입력 확인", "학번과 이름을 올바르게 채워 넣어 주세요.");
+            openModalAlert("입력 확인", "학번과 이름을 빠짐없이 입력해 주십시오.");
             return;
         }
         startQuizWorkflow();
