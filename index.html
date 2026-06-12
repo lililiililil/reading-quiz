@@ -481,7 +481,7 @@
     let studentName = "";
     let quizDetailsHistory = []; // 현재 라운드 진행 중 정오답 스냅샷을 담아낼 히스토리 구조체
 
-    // 💡 [버그 완벽 수정] 누락되어 자바스크립트가 다운되던 교사 제어 관련 DOM 선언 복원 및 강제 매핑 완료!
+    // [버그 완벽 수정] 누락되어 자바스크립트가 다운되던 교사 제어 관련 DOM 선언 복원 및 강제 매핑 완료!
     const adminModal = document.getElementById('admin-modal');
     const adminCard = document.getElementById('admin-card');
     const adminAuthPanel = document.getElementById('admin-auth-panel');
@@ -1134,110 +1134,6 @@
         });
     }
 
-    // [Rule 1 & Rule 2 준수] 교사 대시보드 성적 리스트 메모리 필터 로딩
-    async function refreshAdminDashboard() {
-        if (!isFirebaseActive || !user || !loggedInTeacherId) {
-            adminServerQuizCount.innerText = "로컬 모드";
-            adminServerResultCount.innerText = "조회 불가";
-            return;
-        }
-
-        try {
-            const qSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'quizzes'));
-            let quizSize = 0;
-            qSnap.forEach(doc => {
-                if (doc.data().teacherId === loggedInTeacherId) quizSize++;
-            });
-            adminServerQuizCount.innerText = `${quizSize}개`;
-
-            const rSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'results'));
-            const results = [];
-            cachedStudentsResultsMap = {}; // 초기화
-            rSnap.forEach(doc => {
-                const rData = doc.data();
-                if (rData.teacherId === loggedInTeacherId) {
-                    const record = { id: doc.id, ...rData };
-                    results.push(record);
-                    cachedStudentsResultsMap[doc.id] = record; // 스냅샷 백업 캐싱
-                }
-            });
-            adminServerResultCount.innerText = `${results.length}명`;
-
-            results.sort((a, b) => { return new Date(b.timestamp) - new Date(a.timestamp); });
-
-            adminResultsTable.innerHTML = '';
-
-            if (results.length === 0) {
-                adminResultsTable.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400">등록된 학생의 응시 성적 데이터가 존재하지 않습니다.</td></tr>`;
-                return;
-            }
-
-            results.forEach(res => {
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition-colors";
-                const timeStr = new Date(res.timestamp).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const totalTargetRound = res.totalRounds || 3;
-
-                // 💡 [요청 기능 3-C] 정답수 란에 클릭 이벤트를 추가하여 오답노트 모달 팝업 가동
-                tr.innerHTML = `
-                    <td class="px-4 py-3 font-semibold text-slate-900">${res.studentId}</td>
-                    <td class="px-4 py-3 font-medium text-slate-700">${res.studentName}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="window.triggerStudentDetailPopup('${res.id}')" class="px-3 py-1 font-bold rounded-xl text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200/50 transition-all shadow-xs">
-                            📊 ${res.score} / ${totalTargetRound} 문항 (상세보기)
-                        </button>
-                    </td>
-                    <td class="px-4 py-3 text-slate-400 text-[11px]">${timeStr}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2 py-1 rounded-lg font-bold text-sm transition-colors" onclick="window.deleteSingleResult('${res.id}', '${res.studentId}', '${res.studentName}')">🗑️</button>
-                    </td>
-                `;
-                adminResultsTable.appendChild(tr);
-            });
-        } catch (error) { console.error("대시보드 리로드 실패:", error); }
-    }
-
-    // 💡 [요청 기능 3-D] 성적 보드에서 임의 학생 버튼을 누르면 어떤 문제집을 마킹했는지 실시간 데이터 전개 모달 팝업 구현
-    window.triggerStudentDetailPopup = (docId) => {
-        const studentRecord = cachedStudentsResultsMap[docId];
-        if (!studentRecord) return;
-
-        const modal = document.getElementById('student-detail-modal');
-        const title = document.getElementById('detail-modal-student-title');
-        const body = document.getElementById('student-detail-modal-body');
-
-        title.innerText = `📝 [${studentRecord.studentId} ${studentRecord.studentName}] 학생 오답노트`;
-        body.innerHTML = '';
-
-        const historyList = studentRecord.answersDetail || [];
-        if (historyList.length === 0) {
-            body.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">해당 학생의 상세 정오답 문항 스냅샷 로그가 클라우드에 누락되었습니다.</p>`;
-        } else {
-            historyList.forEach((item, idx) => {
-                const box = document.createElement('div');
-                box.className = `p-4 rounded-2xl border text-left bg-white shadow-xs space-y-2`;
-                box.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-slate-100 pb-1.5">
-                        <span class="text-xs font-extrabold text-slate-800">Q${idx + 1}. 독서 검증 문항</span>
-                        <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${item.isCorrect ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
-                            ${item.isCorrect ? '⭕ 정답' : '❌ 오답'}
-                        </span>
-                    </div>
-                    <p class="text-xs font-bold text-slate-900 leading-relaxed">${item.q}</p>
-                    <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                        <div class="bg-slate-50 p-2 rounded-lg"><span class="text-slate-400 block text-[9px] uppercase font-bold">학생 선택답안</span><span class="font-semibold text-slate-700">${item.userAns}</span></div>
-                        <div class="bg-indigo-50/50 p-2 rounded-lg"><span class="text-indigo-400 block text-[9px] uppercase font-bold">정답 해답지</span><span class="font-semibold text-indigo-700">${item.correctAns}</span></div>
-                    </div>
-                `;
-                body.appendChild(box);
-            });
-        }
-        modal.classList.remove('hidden');
-    };
-
-    document.getElementById('btn-close-detail-modal').onclick = () => {
-        document.getElementById('student-detail-modal').classList.add('hidden');
-    };
-
     // 💡 [요청 기능 3-E] 성적 보드 다운로드 처리 시 우측 행 컬럼에 출제 질문과 마킹 정보 동적 확장 기입
     btnExportResults.onclick = async () => {
         if (!isFirebaseActive || !user || !loggedInTeacherId) return;
@@ -1363,7 +1259,7 @@
         });
     };
     
-    btnClearResults.onclick = () => {
+    document.getElementById('btn-clear-results').onclick = () => {
         if (!loggedInTeacherId) return;
         openModalAlert("데이터 전체 소멸", "정말 내 누적 모든 학생 성적 결과를 일괄 삭제하시겠습니까? 이 조작은 절대 복구할 수 없습니다.", "🔥", true, async () => {
             try { 
