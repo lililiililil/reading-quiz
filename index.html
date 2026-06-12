@@ -462,11 +462,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // 로그인 및 회원가입에 필수적인 핵심 파이어베이스 인증 모듈 선언
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 1. 글로벌 환경 설정 및 파이어베이스 세팅
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-book-quiz';
     const fallbackConfig = {
         apiKey: "AIzaSyDpO7h9rUFpzPROfVnKzhjpbRqAtgu5fAw",
@@ -499,7 +497,6 @@
     let studentName = "";
     let quizDetailsHistory = []; 
 
-    // 💡 [임시 메모리 버퍼 기획] 파싱된 퀴즈 정보 홀더 변수 선언
     let parsedAdminQuizzes = [];
     let parsedAdminFilename = "";
 
@@ -530,7 +527,6 @@
         await initFirebaseConnection();
     };
 
-    // Firebase 연동 상태 모니터링 및 복원
     async function initFirebaseConnection() {
         const statusDot = document.getElementById('status-dot');
         const statusText = document.getElementById('status-text');
@@ -649,7 +645,6 @@
         }
     }
 
-    // [UI 흐름 수리] 로컬/서버 모드에 따라 알맞은 학생 진입상자를 화면에 정상 분기 출력합니다.
     function updateIntroView() {
         const studentEntryBox = document.getElementById('student-entry-box');
         const excelDropBox = document.getElementById('excel-drop-box');
@@ -658,24 +653,20 @@
         const localReadyInfo = document.getElementById('local-ready-info');
 
         if (isFirebaseActive && allQuizzes.length >= globalLimitQuizCount) {
-            // 서버 퀴즈 구동 가능한 모드
             excelDropBox.classList.add('hidden');
             localReadyInfo.classList.add('hidden');
             studentEntryBox.classList.remove('hidden');
             serverQuizInfo.innerText = `'${currentTeacherId}' 선생님 방에 총 ${allQuizzes.length}개의 문제가 준비되어 있으며, 이 중 [${globalLimitQuizCount}문제]가 랜덤 출제됩니다.`;
             introSubtitle.innerText = "학번과 이름을 입력하면 실시간 독서 활동 검증 퀴즈에 응시할 수 있습니다.";
         } else {
-            // 로컬 모드 혹은 서버 준비 미달
             studentEntryBox.classList.add('hidden');
             if (allQuizzes.length > 0 && allQuizzes.length < globalLimitQuizCount) {
-                // 서버 문제는 있으나 문항수가 모자란 비상 모드
                 excelDropBox.classList.remove('hidden');
                 introSubtitle.innerText = `⚠️ '${currentTeacherId}' 선생님 방의 문제 수(${allQuizzes.length}개)가 설정 문항 수(${globalLimitQuizCount}개)보다 적어 퀴즈가 시작되지 않습니다.`;
             } else if (currentTeacherId) {
                 excelDropBox.classList.remove('hidden');
                 introSubtitle.innerText = `⚠️ '${currentTeacherId}' 선생님의 퀴즈 저장소가 비어 있습니다. 관리 도구에서 엑셀 문제를 채워주세요.`;
             } else {
-                // 공통 메인화면 로컬 모드
                 if (allQuizzes.length > 0) {
                     excelDropBox.classList.add('hidden');
                     localReadyInfo.classList.remove('hidden');
@@ -688,20 +679,67 @@
         }
     }
 
-    function openModalAlert(title, message, emoji = "⚠️", isConfirm = false, onConfirmCallback = null) {
-        const modal = document.getElementById('custom-alert-modal');
-        const icon = document.getElementById('alert-icon');
-        const t = document.getElementById('alert-title');
-        const desc = document.getElementById('alert-desc');
-        const confirmBtn = document.getElementById('alert-confirm-btn');
-        const cancelBtn = document.getElementById('alert-cancel-btn');
+    // 💡 [요청 해결] 누락되었던 엑셀 헤더 매핑 기능을 원형 그대로 선언하여 헤더 오류를 완벽히 해결합니다.
+    function mapHeaders(headers) {
+        let mapping = { book: -1, type: -1, q: -1, opt1: -1, opt2: -1, opt3: -1, opt4: -1, correct: -1, info: -1, range: -1 };
+        headers.forEach((h, idx) => {
+            if (!h) return;
+            const text = h.toString().replace(/\s+/g, '').toLowerCase();
 
-        icon.innerText = emoji; t.innerText = title; desc.innerText = message;
-        if (isConfirm) cancelBtn.classList.remove('hidden'); else cancelBtn.classList.add('hidden');
-        modal.classList.remove('hidden');
+            if (text.includes("책") || text.includes("도서") || text.includes("book") || text.includes("작품") || text.includes("잡지") || text.includes("간행물")) {
+                if (mapping.book === -1) mapping.book = idx;
+            }
+            else if (text.includes("유형") || text.includes("type")) {
+                if (mapping.type === -1) mapping.type = idx;
+            }
+            else if (text.includes("범위") || text.includes("range") || text.includes("단원") || text.includes("챕터") || text.includes("페이지") || text.includes("단락")) {
+                if (mapping.range === -1) mapping.range = idx;
+            }
+            else if (text.includes("문제") || text.includes("질문") || text.includes("퀴즈") || text.includes("q") || text.includes("question")) {
+                if (mapping.q === -1) mapping.q = idx;
+            }
+            else if (text.includes("보기1") || text.includes("선택지1") || text.includes("옵션1") || (text.includes("1") && text.includes("보기")) || text === "보기1") {
+                if (mapping.opt1 === -1) mapping.opt1 = idx;
+            }
+            else if (text.includes("보기2") || text.includes("선택지2") || text.includes("옵션2") || (text.includes("2") && text.includes("보기")) || text === "보기2") {
+                if (mapping.opt2 === -1) mapping.opt2 = idx;
+            }
+            else if (text.includes("보기3") || text.includes("선택지3") || text.includes("옵션3") || (text.includes("3") && text.includes("보기")) || text === "보기3") {
+                if (mapping.opt3 === -1) mapping.opt3 = idx;
+            }
+            else if (text.includes("보기4") || text.includes("선택지4") || text.includes("옵션4") || (text.includes("4") && text.includes("보기")) || text === "보기4") {
+                if (mapping.opt4 === -1) mapping.opt4 = idx;
+            }
+            else if (text.includes("정답") || text.includes("답안") || text.includes("correct") || text === "답") {
+                if (mapping.correct === -1) mapping.correct = idx;
+            }
+            else if (text.includes("해설") || text.includes("설명") || text.includes("풀이") || text.includes("info") || text.includes("explanation") || text.includes("근거")) {
+                if (mapping.info === -1) mapping.info = idx;
+            }
+        });
 
-        confirmBtn.onclick = () => { modal.classList.add('hidden'); if (onConfirmCallback) onConfirmCallback(); };
-        cancelBtn.onclick = () => { modal.classList.add('hidden'); };
+        // 자동 감지 실패 시, 열 개수에 기반한 안전한 Fallback 지정
+        let isTimestampPresent = false;
+        if (headers[0] && (headers[0].toString().includes("타임") || headers[0].toString().includes("Time") || headers[0].toString().includes("시간"))) {
+            isTimestampPresent = true;
+        }
+        let offset = isTimestampPresent ? 1 : 0;
+        let actualLength = headers.length - offset;
+
+        if (mapping.book === -1) mapping.book = offset + 0;
+        if (mapping.type === -1) mapping.type = offset + 1;
+        if (mapping.range === -1) mapping.range = (actualLength >= 10) ? offset + 2 : -1;
+        
+        const qOffset = (actualLength >= 10) ? 3 : 2;
+        if (mapping.q === -1) mapping.q = offset + qOffset;
+        if (mapping.opt1 === -1) mapping.opt1 = offset + qOffset + 1;
+        if (mapping.opt2 === -1) mapping.opt2 = offset + qOffset + 2;
+        if (mapping.opt3 === -1) mapping.opt3 = offset + qOffset + 3;
+        if (mapping.opt4 === -1) mapping.opt4 = offset + qOffset + 4;
+        if (mapping.correct === -1) mapping.correct = offset + qOffset + 5;
+        if (mapping.info === -1) mapping.info = offset + qOffset + 6;
+
+        return mapping;
     }
 
     const dropzone = document.getElementById('dropzone');
@@ -724,11 +762,7 @@
         }
     });
 
-    // [중복 업로드 버그 해결] 파일 선택 인풋 클릭 시 밸류를 비워주어 같은 파일 재선택 가능하게 리셋 처리
-    fileInput.onclick = function() { this.value = ''; };
-    document.getElementById('admin-excel-file').onclick = function() { this.value = ''; };
-
-    // [파일 취소 ❌] 로컬 엑셀 파싱 취소 및 드롭존 환원
+    // 💡 [파일 취소 ❌] 로컬 엑셀 파싱 취소 및 드롭존 환원
     document.getElementById('btn-cancel-local-excel').onclick = () => {
         allQuizzes = [];
         document.getElementById('local-ready-info').classList.add('hidden');
@@ -769,7 +803,7 @@
                 }
 
                 if (isAdminUpload) {
-                    // 💡 [2단계 업로드 연동] 파싱 후 즉시 DB 업로드하지 않고, 임시 보관한 뒤 전송 버튼과 알림 상자를 출력합니다.
+                    // [2단계 업로드 연동] 파싱 후 즉시 DB 업로드하지 않고, 임시 보관한 뒤 전송 버튼과 알림 상자를 출력합니다.
                     parsedAdminQuizzes = parsedQuizzes;
                     parsedAdminFilename = file.name;
                     
@@ -992,99 +1026,6 @@
         };
     }
 
-    function sanitizeCorrectAnswer(val, type) {
-        if (val === undefined || val === null) return type === "OX" ? "O" : (type === "객관식" ? 1 : [""]);
-        let cleaned = val.toString().trim();
-        if (type === "OX") {
-            let uc = cleaned.toUpperCase().replace(/\s+/g, '');
-            if (uc.includes("O") || uc.includes("참") || uc.includes("T") || uc === "1" || uc === "YES") return "O";
-            if (uc.includes("X") || uc.includes("거짓") || uc.includes("F") || uc === "2" || uc === "NO") return "X";
-            return "O";
-        }
-        if (type === "객관식") {
-            let uc = cleaned.replace(/\s+/g, '');
-            if (uc.includes("①") || uc.includes("1")) return 1; if (uc.includes("②") || uc.includes("2")) return 2; if (uc.includes("③") || uc.includes("3")) return 3; if (uc.includes("④") || uc.includes("4")) return 4;
-            return 1;
-        }
-        if (type === "단답형") { return cleaned.split(",").map(ans => ans.trim()).filter(ans => ans.length > 0); }
-        return cleaned;
-    }
-
-    document.getElementById('btn-start-quiz').onclick = async () => {
-        const idInput = document.getElementById('student-id');
-        const nameInput = document.getElementById('student-name');
-        const errorMsg = document.getElementById('server-student-validation-error');
-        const btn = document.getElementById('btn-start-quiz');
-
-        studentId = idInput.value.trim();
-        studentName = nameInput.value.trim();
-
-        if (!studentId || !studentName) {
-            if (errorMsg) errorMsg.classList.remove('hidden');
-            return;
-        }
-        if (errorMsg) errorMsg.classList.add('hidden');
-        
-        const originalBtnText = btn.innerText;
-        btn.innerText = "중복 참여 여부 확인 중...";
-        btn.disabled = true;
-        
-        try {
-            if (isFirebaseActive && user && db && currentTeacherId) {
-                // [Rule 1 준수] 결과 격리 및 수신 경로 보증
-                const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'results');
-                const snap = await getDocs(resultsRef);
-                
-                let alreadyParticipated = false;
-                let pastRecord = null;
-
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    if (data.teacherId === currentTeacherId && data.studentId === studentId) {
-                        alreadyParticipated = true;
-                        pastRecord = data;
-                    }
-                });
-
-                if (alreadyParticipated) {
-                    btn.innerText = originalBtnText;
-                    btn.disabled = false;
-
-                    const dateFormatted = new Date(pastRecord.timestamp).toLocaleString('ko-KR');
-                    openModalAlert(
-                        "응시 완료 안내",
-                        `이미 이 독서 퀴즈에 참여한 이력이 있습니다.\n\n• 학번/이름: ${pastRecord.studentId} ${pastRecord.studentName}\n• 기존 성적: ${pastRecord.totalRounds}문제 중 ${pastRecord.score}문제 정답\n• 응시 일시: ${dateFormatted}\n\n중복 도전하실 수 없습니다.`,
-                        "🚫"
-                    );
-                    return;
-                }
-            }
-
-            btn.innerText = originalBtnText;
-            btn.disabled = false;
-            startQuizWorkflow();
-
-        } catch (error) {
-            btn.innerText = originalBtnText;
-            btn.disabled = false;
-            openModalAlert("퀴즈 시작 오류", "중복 응시 여부를 대조하는 과정에서 통신 에러가 발생했습니다. 에러 내용: " + error.message, "❌");
-        }
-    };
-
-    document.getElementById('btn-start-local-quiz').onclick = () => {
-        const idInput = document.getElementById('local-student-id');
-        const nameInput = document.getElementById('local-student-name');
-
-        studentId = idInput.value.trim();
-        studentName = nameInput.value.trim();
-
-        if (!studentId || !studentName) {
-            openModalAlert("입력 확인", "학번과 이름을 빠짐없이 입력해 주십시오.");
-            return;
-        }
-        startQuizWorkflow();
-    };
-
     function startQuizWorkflow() {
         document.getElementById('step-intro').classList.add('hidden');
         document.getElementById('step-quiz').classList.remove('hidden');
@@ -1268,44 +1209,7 @@
         }
     }
 
-    document.getElementById('btn-copy-result').onclick = () => {
-        const timestamp = new Date().toLocaleString('ko-KR');
-        const status = score >= 1 ? "★ 미션 성공 ★" : "미션 완료 (정답수 미달)";
-        const copyText = `[독서 퀴즈 도전 보고서]\n━━━━━━━━━━━━━\n■ 학번: ${studentId}\n■ 이름: ${studentName}\n■ 점수: ${globalLimitQuizCount}문제 중 ${score}문제 해결\n■ 결과: ${status}\n■ 시각: ${timestamp}\n━━━━━━━━━━━━━`;
-        const textarea = document.createElement('textarea'); textarea.value = copyText; textarea.style.position = 'fixed'; textarea.style.top = '-9999px'; document.body.appendChild(textarea); textarea.select();
-        try {
-            const isSuccess = document.execCommand('copy');
-            const btn = document.getElementById('btn-copy-result');
-            if (isSuccess) {
-                btn.innerText = "✅ 복사가 성공적으로 완료되었습니다!"; btn.style.backgroundColor = "var(--success)";
-                setTimeout(() => { btn.innerText = "📋 인증 데이터 복사하기"; btn.style.backgroundColor = "var(--primary)"; }, 2000);
-            }
-        } catch (error) { openModalAlert("오류", "클립보드 접근 실패. 수동 복사하세요."); }
-        document.body.removeChild(textarea);
-    };
-
-    const adminExcelInput = document.getElementById('admin-excel-file');
-    adminExcelInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            document.getElementById('admin-selected-filename').innerText = file.name;
-            document.getElementById('btn-clear-admin-file').classList.remove('hidden'); // X버튼 노출
-            handleFileSelect(file, true);
-        }
-    });
-
-    // 💡 [클리어 함수 구조화 및 오버라이드] 파일 삭제 처리용 X 버튼 액션 리스너 수리
-    const clearAdminFileState = () => {
-        adminExcelInput.value = '';
-        document.getElementById('admin-selected-filename').innerText = '선택된 파일 없음';
-        document.getElementById('btn-clear-admin-file').classList.add('hidden');
-        document.getElementById('admin-upload-preview-box').classList.add('hidden');
-        parsedAdminQuizzes = [];
-        parsedAdminFilename = "";
-    };
-    document.getElementById('btn-clear-admin-file').onclick = clearAdminFileState;
-
-    // 💡 [요청 기능 2-D] 임시 분석된 퀴즈 메모리를 최종 검증하여 실시간 데이터베이스(Firestore)로 전송 및 동기화 처리
+    // [요청 해결] 2단계 전송 버튼 클릭 리스너 연결 수립
     document.getElementById('btn-submit-quizzes-to-server').onclick = async () => {
         if (!isFirebaseActive || !user || !loggedInTeacherId) {
             openModalAlert("인증 만료", "선생님 세션이 만료되었습니다. 다시 로그인해 주세요.");
@@ -1416,7 +1320,7 @@
                 const timeStr = new Date(res.timestamp).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const totalTargetRound = res.totalRounds || 3;
 
-                // [요청 기능 3-C] 정답수 란에 클릭 이벤트를 추가하여 오답노트 모달 팝업 가동
+                // 정답수 란에 클릭 이벤트를 추가하여 오답노트 모달 팝업 가동
                 tr.innerHTML = `
                     <td class="px-4 py-3 font-semibold text-slate-900">${res.studentId}</td>
                     <td class="px-4 py-3 font-medium text-slate-700">${res.studentName}</td>
@@ -1435,7 +1339,7 @@
         } catch (error) { console.error("대시보드 리로드 실패:", error); }
     }
 
-    // [요청 기능 3-D] 성적 보드에서 임의 학생 버튼을 누르면 어떤 문제집을 마킹했는지 실시간 데이터 전개 모달 팝업 구현
+    // 성적 보드에서 임의 학생 버튼을 누르면 어떤 문제집을 마킹했는지 실시간 데이터 전개 모달 팝업 구현
     window.triggerStudentDetailPopup = (docId) => {
         const studentRecord = cachedStudentsResultsMap[docId];
         if (!studentRecord) return;
@@ -1477,7 +1381,7 @@
         document.getElementById('student-detail-modal').classList.add('hidden');
     };
 
-    // [요청 기능 3-E] 성적 보드 다운로드 처리 시 우측 행 컬럼에 출제 질문과 마킹 정보 동적 확장 기입
+    // 성적 보드 다운로드 처리 시 우측 행 컬럼에 출제 질문과 마킹 정보 동적 확장 기입
     document.getElementById('btn-export-results').onclick = async () => {
         if (!isFirebaseActive || !user || !loggedInTeacherId) return;
 
@@ -1544,7 +1448,7 @@
             document.getElementById('admin-id-input').value = ''; document.getElementById('admin-pass-input').value = ''; document.getElementById('admin-id-input').focus();
         }
     };
-    document.getElementById('close-admin-btn').onclick = () => { adminCard.classList.add('scale-95'); setTimeout(() => adminModal.classList.add('hidden'), 200); };
+    document.getElementById('close-admin-btn').onclick = () => { adminCard.scale-95; setTimeout(() => adminModal.classList.add('hidden'), 200); };
     document.getElementById('btn-logout-admin').onclick = async () => { try { await signOut(auth); await signInAnonymously(auth); adminMainPanel.classList.add('hidden'); adminAuthPanel.classList.remove('hidden'); openModalAlert("로그아웃 완료", "선생님 퀴즈방 세션이 안전하게 해제되었습니다.", "🔒"); } catch (error) { } };
     document.getElementById('btn-copy-share-link').onclick = () => { const copyInput = document.getElementById('admin-share-link'); copyInput.select(); document.execCommand('copy'); openModalAlert("배포 주소 복사 완료", "클립보드에 주소가 복사되었습니다.\n\n해당 주소를 공지방에 배포하세요.", "✅"); };
     
