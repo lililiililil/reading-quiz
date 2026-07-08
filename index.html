@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지능형 랜덤 독서 퀴즈</title>
+    <title>스마트 랜덤 퀴즈</title>
     <!-- 엑셀 파일을 처리하기 위한 SheetJS 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Tailwind CSS 및 고급 글꼴 적용 -->
@@ -164,18 +164,13 @@
     <!-- 1단계: 메인 인트로 및 학생 로그인 화면 -->
     <div id="step-intro" class="mt-4">
         <div class="text-center mb-8">
-            <span class="text-xs font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full">Book Quiz Challenge</span>
-            <h1 class="text-3xl font-extrabold text-slate-950 mt-3 mb-2">지능형 랜덤 독서 퀴즈</h1>
-            <p class="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto" id="intro-subtitle">서버의 독서 데이터베이스와 연동하여 무작위로 엄선된 퀴즈에 응시합니다.</p>
+            <span class="text-xs font-extrabold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full">Smart Quiz Challenge</span>
+            <h1 class="text-3xl font-extrabold text-slate-950 mt-3 mb-2">스마트 랜덤 퀴즈</h1>
+            <p class="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto" id="intro-subtitle">서버의 문제 은행 데이터베이스와 연동하여 무작위로 엄선된 퀴즈에 응시합니다.</p>
             
             <div class="mt-4 flex flex-wrap gap-2 justify-center">
-                <!-- 엑셀 샘플 양식 받기 -->
-                <button id="download-sample-btn" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-1.5 rounded-full transition-all">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    엑셀 샘플 양식 받기
-                </button>
                 <!-- 💡 [워딩 리뉴얼] 교사용 관리자 화면 -> 우리 학교 퀴즈방 만들기 -->
-                <button id="go-admin-btn" class="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-full transition-all">
+                <button id="go-admin-btn" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-full transition-all">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     우리 학교 퀴즈방 만들기
                 </button>
@@ -210,7 +205,7 @@
                 </div>
 
                 <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-wait" id="btn-start-quiz">
-                    독서 퀴즈 도전하기
+                    랜덤 퀴즈 도전하기
                 </button>
             </div>
         </div>
@@ -221,8 +216,13 @@
                 <svg class="w-12 h-12 text-slate-300 hover:text-indigo-500 mx-auto mb-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                 <p class="text-sm font-bold text-slate-800">여기에 엑셀 파일을 끌어다 놓으세요</p>
                 <p class="text-xs text-slate-400 mt-1">또는 기기에서 파일 탐색기 선택</p>
-                <label for="excel-file" class="inline-block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-all shadow-sm">파일 검색</label>
-                <input type="file" id="excel-file" accept=".xlsx, .xls" class="hidden">
+                <div class="mt-4 flex items-center justify-center gap-2">
+                    <label for="excel-file" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-all shadow-sm flex-shrink-0">파일 검색</label>
+                    <button id="download-sample-btn-local" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-200 hover:bg-indigo-50 px-3.5 py-2 rounded-lg transition-all flex-shrink-0">
+                        📄 샘플 양식 받기
+                    </button>
+                    <input type="file" id="excel-file" accept=".xlsx, .xls" class="hidden">
+                </div>
             </div>
 
             <div id="local-ready-info" class="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 hidden">
@@ -322,20 +322,59 @@
             </div>
         </div>
 
-        <!-- 💡 [워딩 리뉴얼] 아이디/비밀번호 간이 회원가입 및 로그인 패널 -->
-        <div class="p-10 flex flex-col items-center justify-center text-center space-y-4" id="admin-auth-panel">
-            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">🔒</div>
-            <div>
-                <h3 class="font-bold text-slate-800 text-sm">선생님 전용 공간 개설</h3>
-                <p class="text-xs text-slate-400 mt-1">원하는 아이디와 비밀번호를 정해 로그인 또는 최초 회원가입을 하세요.</p>
+        <!-- 💡 [워딩 리뉴얼] 아이디/비밀번호 간이 회원가입 및 로그인 패널 (크기 및 레이아웃 확장) -->
+        <div class="p-6 md:p-10 flex flex-col items-center space-y-6 overflow-y-auto flex-1 w-full" id="admin-auth-panel">
+            <div class="w-16 h-16 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 text-3xl font-bold shadow-sm">
+                🏫
             </div>
-            <div class="w-full max-w-xs space-y-3">
-                <input type="text" id="admin-id-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="아이디 기입 (영어/숫자)">
-                <input type="password" id="admin-pass-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 text-center outline-none" placeholder="비밀번호 기입 (6자리 이상)">
-                
-                <div class="flex gap-2 pt-1">
-                    <button class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs shadow-md shadow-indigo-50" id="btn-login-admin">선생님 로그인</button>
-                    <button class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs" id="btn-signup-admin">새 퀴즈방 만들기</button>
+            <div class="text-center">
+                <h3 class="font-black text-slate-900 text-xl">나만의 스마트 랜덤 퀴즈방</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">교사용 전용 퀴즈방을 개설하여 실시간 무작위 퀴즈 출제와 학생들의 성적 통계를 손쉽게 관리할 수 있습니다.</p>
+            </div>
+
+            <!-- 탭 전환 버튼 -->
+            <div class="flex bg-slate-100 p-1.5 rounded-xl w-full max-w-md">
+                <button id="tab-login" class="flex-1 text-xs font-extrabold py-3 rounded-lg text-indigo-600 bg-white shadow-sm transition-all focus:outline-none">
+                    🔑 퀴즈방 로그인
+                </button>
+                <button id="tab-signup" class="flex-1 text-xs font-extrabold py-3 rounded-lg text-slate-500 hover:text-slate-800 transition-all focus:outline-none">
+                    ✨ 새 퀴즈방 개설 (회원가입)
+                </button>
+            </div>
+
+            <!-- 1인 개발자 보안 권고 경고 배너 -->
+            <div id="security-warning-banner" class="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 text-left w-full max-w-md">
+                <p class="text-xs font-extrabold text-amber-800 flex items-center gap-1">
+                    ⚠️ 1인 개발 서비스 보안 주의 안내
+                </p>
+                <p class="text-[11px] text-amber-700 leading-relaxed mt-1">
+                    본 서비스는 <span class="font-bold text-amber-900">1인 개발자</span>가 교육 보조용으로 구축하여 배포하는 도구입니다. 대기업 수준의 고도화된 방화벽이나 완벽한 보안 환경을 장담하기 어려우므로, <strong>금융기관이나 포털 사이트 등에서 평소 사용하시는 중요 비밀번호는 절대로 입력하지 마시고</strong>, 본 퀴즈방 접속만을 위한 단순 임시 비밀번호를 활용해 주세요.
+                </p>
+            </div>
+
+            <!-- 입력 폼 영역 -->
+            <div class="w-full max-w-md space-y-4">
+                <div class="space-y-1.5 text-left">
+                    <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider ml-1" for="admin-id-input">선생님 아이디</label>
+                    <input type="text" id="admin-id-input" class="w-full bg-slate-50 border-2 border-slate-150 focus:border-indigo-500 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 outline-none transition-all" placeholder="원하는 아이디 입력 (영어/숫자)">
+                </div>
+
+                <div class="space-y-1.5 text-left">
+                    <label class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider ml-1" for="admin-pass-input">비밀번호</label>
+                    <input type="password" id="admin-pass-input" class="w-full bg-slate-50 border-2 border-slate-150 focus:border-indigo-500 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 outline-none transition-all" placeholder="비밀번호 기입 (6자리 이상)">
+                </div>
+
+                <!-- 비밀번호 확인 입력 폼 (기본 숨김, 회원가입 선택 시에만 보임) -->
+                <div id="admin-pass-confirm-wrapper" class="space-y-1.5 text-left hidden">
+                    <label class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider ml-1" for="admin-pass-confirm-input">비밀번호 재확인 (오타 방지)</label>
+                    <input type="password" id="admin-pass-confirm-input" class="w-full bg-indigo-50/20 border-2 border-indigo-150 focus:border-indigo-500 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 outline-none transition-all" placeholder="비밀번호를 한번 더 입력해 주세요">
+                </div>
+
+                <!-- 통합 실행 버튼 -->
+                <div class="pt-2">
+                    <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-xl text-sm shadow-lg shadow-indigo-100 transition-all" id="btn-submit-auth">
+                        선생님 로그인하기
+                    </button>
                 </div>
             </div>
         </div>
@@ -372,16 +411,15 @@
                 </h3>
                 <p class="text-[11px] text-slate-400 leading-relaxed mb-4">학생들이 클라우드 웹 링크만으로 퀴즈를 즉각 풀 수 있도록, 새로운 퀴즈 데이터셋 엑셀 파일을 업로드해 데이터베이스에 저장합니다.</p>
                 
-                <div class="flex items-center gap-3">
-                    <label for="admin-excel-file" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-all">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <label for="admin-excel-file" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg cursor-pointer transition-all flex-shrink-0">
                         엑셀 파일 선택
                     </label>
                     <input type="file" id="admin-excel-file" accept=".xlsx, .xls" class="hidden">
-                    <span class="text-xs text-slate-400" id="admin-selected-filename">선택된 파일 없음</span>
-                    <button id="admin-download-sample-btn" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-white border border-indigo-200 hover:bg-indigo-50 px-3.5 py-2.5 rounded-lg transition-all ml-auto">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        엑셀 샘플 양식 받기
+                    <button id="admin-download-sample-btn" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-200 hover:bg-indigo-50 px-3.5 py-2 rounded-lg transition-all flex-shrink-0">
+                        📄 샘플 양식 받기
                     </button>
+                    <span class="text-xs text-slate-400 ml-2 overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px]" id="admin-selected-filename">선택된 파일 없음</span>
                 </div>
             </div>
 
@@ -865,7 +903,7 @@
             if (!h) return;
             const text = h.toString().replace(/\s+/g, '').toLowerCase();
 
-            if (text.includes("책") || text.includes("도서") || text.includes("book") || text.includes("작품")) {
+            if (text.includes("책") || text.includes("도서") || text.includes("book") || text.includes("작품") || text.includes("주제") || text.includes("과목") || text.includes("subject") || text.includes("topic")) {
                 if (mapping.book === -1) mapping.book = idx;
             }
             else if (text.includes("유형") || text.includes("type")) {
@@ -957,23 +995,26 @@
     function triggerSampleDownload(e) {
         if (e) e.preventDefault();
         const data = [
-            ["책제목", "문제유형", "출제범위", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"],
-            ["어린 왕자", "객관식", "1장 ~ 3장", "어린 왕자의 고향 행성 이름은 무엇일까요?", "B612", "A101", "지구", "화성", "1", "어린 왕자는 소행성 B612에서 왔습니다."],
-            ["데미안", "OX", "p.45 ~ p.80", "싱클레어가 알에서 깨어나기 위해 만난 주인공의 정신적 멘토는 크로머이다.", "O", "X", "", "", "X", "싱클레어의 멘토는 크로머가 아니라 데미안입니다."],
-            ["1984", "단답형", "제 1부 전체", "작품 속에서 당과 사회를 철저히 감시하는 독재적 감시 시스템 및 가상의 지배자 이름은?", "", "", "", "", "빅 브라더, 빅브라더", "빅 브라더(Big Brother)는 사회를 철저히 지배하고 감시하는 독재자입니다."],
-            ["변신", "OX", "프롤로그", "주인공 그레고르 잠자는 어느 날 아침 침대에서 깨어났을 때 흉측한 갑충으로 변해 있었다.", "O", "X", "", "", "O", "그레고르 잠자는 거대한 벌레로 일순간 변했습니다."]
+            ["주제(또는 책제목)", "문제유형", "출제범위", "문제", "보기1", "보기2", "보기3", "보기4", "정답", "해설"],
+            ["일반 상식", "객관식", "초급", "태양계에서 가장 큰 행성은 무엇일까요?", "목성", "토성", "지구", "화성", "1", "목성은 태양계에서 부피와 질량이 가장 큰 행성입니다."],
+            ["역사", "OX", "근현대사", "대한민국의 광복절은 8월 15일이다.", "O", "X", "", "", "O", "광복절은 1945년 8월 15일 국권을 회복한 날을 기념하는 국경일입니다."],
+            ["영어 단어", "단답형", "기초 영단어", "'사과'를 영어로 올바르게 스펠링한 낱말은?", "", "", "", "", "apple, Apple", "사과는 영어로 apple 입니다."],
+            ["우주 과학", "OX", "상식", "달은 스스로 빛을 낼 수 있는 항성이다.", "O", "X", "", "", "X", "달은 태양빛을 반사하는 위성이지, 스스로 빛을 내는 항성이 아닙니다."]
         ];
         try {
             const worksheet = XLSX.utils.aoa_to_sheet(data);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "독서퀴즈_샘플양식");
-            XLSX.writeFile(workbook, "독서퀴즈_지능형_샘플양식.xlsx");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "랜덤퀴즈_샘플양식");
+            XLSX.writeFile(workbook, "스마트_랜덤퀴즈_샘플양식.xlsx");
         } catch (error) {
             openModalAlert("오류", "샘플 다운로드 도중 에러가 발생했습니다: " + error.message);
         }
     }
 
-    document.getElementById('download-sample-btn').onclick = triggerSampleDownload;
+    const btnLocalSample = document.getElementById('download-sample-btn-local');
+    if (btnLocalSample) {
+        btnLocalSample.onclick = triggerSampleDownload;
+    }
     
     const adminDownloadBtn = document.getElementById('admin-download-sample-btn');
     if (adminDownloadBtn) {
@@ -1315,6 +1356,31 @@
     const adminAuthPanel = document.getElementById('admin-auth-panel');
     const adminMainPanel = document.getElementById('admin-main-panel');
 
+    let activeAuthTab = 'login'; // login or signup
+
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const passConfirmWrapper = document.getElementById('admin-pass-confirm-wrapper');
+    const btnSubmitAuth = document.getElementById('btn-submit-auth');
+
+    if (tabLogin && tabSignup && passConfirmWrapper && btnSubmitAuth) {
+        tabLogin.onclick = () => {
+            activeAuthTab = 'login';
+            tabLogin.className = "flex-1 text-xs font-extrabold py-3 rounded-lg text-indigo-600 bg-white shadow-sm transition-all focus:outline-none";
+            tabSignup.className = "flex-1 text-xs font-extrabold py-3 rounded-lg text-slate-500 hover:text-slate-800 transition-all focus:outline-none";
+            passConfirmWrapper.classList.add('hidden');
+            btnSubmitAuth.innerText = "선생님 로그인하기";
+        };
+
+        tabSignup.onclick = () => {
+            activeAuthTab = 'signup';
+            tabSignup.className = "flex-1 text-xs font-extrabold py-3 rounded-lg text-indigo-600 bg-white shadow-sm transition-all focus:outline-none";
+            tabLogin.className = "flex-1 text-xs font-extrabold py-3 rounded-lg text-slate-500 hover:text-slate-800 transition-all focus:outline-none";
+            passConfirmWrapper.classList.remove('hidden');
+            btnSubmitAuth.innerText = "새 퀴즈방 개설하기 (회원가입)";
+        };
+    }
+
     document.getElementById('go-admin-btn').onclick = () => {
         adminModal.classList.remove('hidden');
         setTimeout(() => adminCard.classList.remove('scale-95'), 10);
@@ -1324,6 +1390,8 @@
             adminMainPanel.classList.add('hidden');
             document.getElementById('admin-id-input').value = '';
             document.getElementById('admin-pass-input').value = '';
+            document.getElementById('admin-pass-confirm-input').value = '';
+            if (tabLogin) tabLogin.click(); // Default to login tab
             document.getElementById('admin-id-input').focus();
         }
     };
@@ -1333,7 +1401,7 @@
         setTimeout(() => adminModal.classList.add('hidden'), 200);
     };
 
-    document.getElementById('btn-signup-admin').onclick = async () => {
+    document.getElementById('btn-submit-auth').onclick = async () => {
         const id = document.getElementById('admin-id-input').value.trim();
         const pass = document.getElementById('admin-pass-input').value.trim();
         
@@ -1341,36 +1409,55 @@
             openModalAlert("입력 확인", "아이디와 비밀번호를 모두 입력해 주십시오.");
             return;
         }
-        if (pass.length < 6) {
-            openModalAlert("보안 경고", "비밀번호는 최소 6자리 이상이어야 보호 수준이 유지됩니다.");
-            return;
-        }
 
-        try {
-            const virtualEmail = `${id}@readingquiz.com`;
-            await createUserWithEmailAndPassword(auth, virtualEmail, pass);
-            openModalAlert("회원가입 성공", `'${id}' 선생님의 퀴즈방이 개설되었습니다. 자동으로 연결합니다!`, "🎉");
-        } catch (error) {
-            let userMsg = error.message;
-            if (error.code === 'auth/email-already-in-use') userMsg = "이미 존재하는 선생님 ID입니다. 다른 ID를 선택해 주세요.";
-            openModalAlert("가입 실패", "새로운 교사 계정을 개설하지 못했습니다. 사유: " + userMsg, "❌");
-        }
-    };
+        if (activeAuthTab === 'signup') {
+            const passConfirm = document.getElementById('admin-pass-confirm-input').value.trim();
+            if (!passConfirm) {
+                openModalAlert("입력 확인", "비밀번호 확인 칸에 입력한 비밀번호를 한번 더 정확히 기입해 주십시오.");
+                return;
+            }
+            if (pass !== passConfirm) {
+                openModalAlert("입력 불일치", "비밀번호와 비밀번호 확인 입력값이 일치하지 않습니다. 오타를 방지하기 위해 다시 한 번 정확히 입력해 주십시오.", "❌");
+                return;
+            }
+            if (pass.length < 6) {
+                openModalAlert("보안 경고", "비밀번호는 최소 6자리 이상이어야 안전하게 보호 수준이 유지됩니다.");
+                return;
+            }
 
-    document.getElementById('btn-login-admin').onclick = async () => {
-        const id = document.getElementById('admin-id-input').value.trim();
-        const pass = document.getElementById('admin-pass-input').value.trim();
-        
-        if (!id || !pass) {
-            openModalAlert("입력 확인", "아이디와 비밀번호를 모두 정확히 입력해 주십시오.");
-            return;
-        }
+            const btn = document.getElementById('btn-submit-auth');
+            const originalText = btn.innerText;
+            btn.innerText = "퀴즈방 개설 진행 중...";
+            btn.disabled = true;
 
-        try {
-            const virtualEmail = `${id}@readingquiz.com`;
-            await signInWithEmailAndPassword(auth, virtualEmail, pass);
-        } catch (error) {
-            openModalAlert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다. 다시 확인해 주세요.", "🔒");
+            try {
+                const virtualEmail = `${id}@readingquiz.com`;
+                await createUserWithEmailAndPassword(auth, virtualEmail, pass);
+                openModalAlert("회원가입 성공", `'${id}' 선생님의 퀴즈방이 개설되었습니다. 자동으로 연결합니다!`, "🎉");
+            } catch (error) {
+                let userMsg = error.message;
+                if (error.code === 'auth/email-already-in-use') userMsg = "이미 존재하는 선생님 ID입니다. 다른 ID를 선택해 주세요.";
+                openModalAlert("가입 실패", "새로운 교사 계정을 개설하지 못했습니다. 사유: " + userMsg, "❌");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        } else {
+            // Login mode
+            const btn = document.getElementById('btn-submit-auth');
+            const originalText = btn.innerText;
+            btn.innerText = "로그인 진행 중...";
+            btn.disabled = true;
+
+            try {
+                const virtualEmail = `${id}@readingquiz.com`;
+                await signInWithEmailAndPassword(auth, virtualEmail, pass);
+            } catch (error) {
+                openModalAlert("로그인 실패", "아이디 또는 비밀번호가 틀렸습니다. 다시 확인해 주세요.", "🔒");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
     };
 
@@ -1380,7 +1467,14 @@
             await signInAnonymously(auth);
             adminMainPanel.classList.add('hidden');
             adminAuthPanel.classList.remove('hidden');
-            openModalAlert("로그아웃 완료", "선생님 퀴즈방 세션이 안전하게 해제되었습니다.", "🔒");
+            
+            // Close the admin modal and return to the first page (step-intro)
+            adminModal.classList.add('hidden');
+            document.getElementById('step-intro').classList.remove('hidden');
+            document.getElementById('step-quiz').classList.add('hidden');
+            document.getElementById('step-result').classList.add('hidden');
+            
+            openModalAlert("로그아웃 완료", "선생님 퀴즈방 세션이 안전하게 해제되었습니다. 첫 페이지로 이동합니다.", "🔒");
         } catch (error) {
             openModalAlert("오류", "로그아웃 진행 도중 문제가 발생했습니다: " + error.message);
         }
